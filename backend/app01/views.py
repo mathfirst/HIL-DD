@@ -24,7 +24,7 @@ def getPDBList(request):
         os.makedirs(full_pdb_dir)
     pdb_list = []
     for i, j in zip(df['Index'], df['PDB_ID']):
-        shutil.move(f'../configs/test_protein/protein_{i}.pdb', f'app01/static/full_pdb/protein_{j}.pdb')
+        shutil.copy(f'../configs/test_protein/protein_{i}.pdb', f'app01/static/full_pdb/protein_{j}.pdb')
         pdb_list.append({'id': i,
                          'name': j,
                          'url': f'full_pdb/protein_{j}.pdb'})
