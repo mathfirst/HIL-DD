@@ -1,0 +1,10 @@
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+.idea
+**/__pycache__
+./configs/test_protein/
+./logs_sampling/
+./logs/
+./data/
+./tmp/
+./backend/static/full_pdb/

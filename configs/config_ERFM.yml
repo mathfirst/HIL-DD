@@ -1,0 +1,59 @@
+data:
+  name: pl
+  path: ./data/crossdocked_pocket10
+  split: ./data/split_by_name.pt
+  path_name2id: ./data/crossdocked_pocket10_name2id.pt
+  pos_scale: 1.0    # multiply positions by this scalar
+  transform:
+    ligand_atom_mode: add_aromatic_wo_h
+    random_rot: False
+
+  pair_size: 10
+
+model:
+  hidden_dim: 256
+  num_timesteps: 1000  # number of time steps for the rectified flow model
+  depth: 5   # number of EGNN layers
+  gcl_layers: 1
+  use_mlp: True # use mlp for the atom features of ligand
+  agg_norm_factor: 5
+  feat_t_dim: 8
+  egnn_attn: True #  early experiments tell us that attention does not help and it may degrade performance
+  use_latest_h: True
+  protein_ele_dim: 16
+  protein_aa_dim: 16
+  protein_is_backbone_dim: 8
+
+train:
+  n_steps_per_iter: 4
+  loss_type: 'MAE'
+  time_sampling: 'uniform'
+  len_history: 100000
+  bond: True
+  checkpoint: False
+  ckp_path: config/pretrained/ckp_ERFM.pt
+  epochs: 100
+  batch_size: 1
+  num_workers: 4
+  max_grad_norm: 2000.0
+  ema_decay: 0.9999
+  print_interval: 30
+  distance_sin_emb: True
+  shuffle: True
+  optimize_embedding: False
+  opt_time_emb: False
+  n_knn: 48
+  num_pockets: 5
+  optimizer:
+    lr: 1.e-3
+    weight_decay: 1.e-3
+  lr_scheduler:
+    reset_lr: False
+    stepsize: 1
+    gamma: 0.8
+    patience: 5
+    lr_warmup_steps: 200000
+
+val:
+  sampling: 'Euler'
+  sampling_exit: False

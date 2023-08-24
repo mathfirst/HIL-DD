@@ -1,0 +1,106 @@
+data:
+  name: pl
+  path: ./data/crossdocked_pocket10
+  split: ./data/split_by_name.pt
+  path_name2id: ./data/crossdocked_pocket10_name2id.pt
+  feat_dim: 32         # the dimension of feature embeddings
+  pos_scale: 1.0
+  transform:
+    ligand_atom_mode: add_aromatic_wo_h # basic
+#    ligand_atom_mode: basic # basic
+    random_rot: False
+model:
+  m_dim: 8  # old EGNN
+  hidden_dim: 256
+  use_mlp: True
+  num_timesteps: 1000  # number of time steps for the rectified flow model
+
+  depth: 5   # number of EGNN layers
+  gcl_layers: 1 # times of message passing
+  agg_norm_factor: 5.0  # aggregation normalization factor
+  feat_t_dim: 8
+  egnn_attn: True #  early experiments tell us that attention does not help and it may degrade performance
+  normalization: True   # We use layernorm instead of batch normalization.
+  protein_ele_dim: 16
+  protein_aa_dim: 16
+  protein_is_backbone_dim: 8
+train:
+  n_steps_per_iter: 4
+  loss_type: MAE # MAE or MSE
+  time_sampling: 'uniform'  # [linear, importance, uniform] sample time_step with importance. To be specific, if a certain t gives a greater loss, then this t will be sampled more often
+  len_history: 100000
+  optimize_target_emb: False # optimize feature embeddings when it comes to target
+  bond: True
+  checkpoint: True
+  ckp_path: configs/ckp_ERFM.pt
+  epochs: 500
+  batch_size: 1
+  num_workers: 0
+  max_grad_norm: 10.0
+  emb_scale_factor: None
+  ema_decay: 0.9999
+  print_interval: 30
+  distance_sin_emb: True
+  shuffle: False
+  optimize_embedding: False
+  opt_time_emb: False
+  n_knn: 48
+  only_sample: False   # Note that before you set it as true, you have to set checkpoint as true.
+  num_pockets: 5   # how many pockets we will use for sampling
+  num_samples: 1
+  optimizer:
+    lr: 4.e-5
+    weight_decay: 1.0e-3
+  lr_scheduler:
+    reset_lr: False
+    stepsize: 1
+    gamma: 0.8
+    patience: 50
+    lr_warmup_steps: 10000
+
+val:
+  sampling: 'Euler' # 'Euler' or 'recon' When the model is trained with recon loss, we can use this method to sample.
+  sampling_exit: False
+  use_aromatic_info: True
+  num_spacing_steps: False  # False, 100, 50, 20, 10, 5
+  all_val_pockets: False
+  num_samples: 1000
+  cal_vina_score: True
+  drop_unconnected_mol: False
+  sampling_method: Euler
+
+pref:
+  pref_loss_type: combine  # combine or separate
+  use_unconnected: False
+  num_proposals: 5
+  num_positive_samples: 2
+  num_negative_samples: 2
+  num_samples_eval: 8
+  num_rounds: 5
+  num_injections_per_round: 12
+  cal_vina_score: True
+  temperature: 0.5
+  num_updates_per_injection: 50
+  max_num_updates: 200
+  noise: 0.0
+  pocket_idx: 4
+  metric: 'vina_score' # 'sa' # 'benzene_ring' # 'fused_benzenes'  # 'sa', 'vina_score'
+  num_spacing_steps: False # 100
+  use_ema: False
+  variance_trials: 3
+  n_steps: 1
+  proposal_factor: 4
+  loss_type: 'MAE' # 'MAE'  # 'CE'
+  cls_guidance:
+    loss_type: 'BCE' # 'BCE'
+    scale_start: 0.1
+    scale: 0.1
+    num_val_iterations: 100
+  increasing_num_updates: True
+  ckp: False
+  sample_batchsize: 13
+  only_cls_guide: False
+  guide_with_pocket: False
+  all_pref_data: False
+  proposal_dir: './tmp/samples_pocket4_proposals'
+  num_atoms: 18
