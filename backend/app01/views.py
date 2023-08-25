@@ -74,17 +74,9 @@ def getTimePDB(request):
     if output.strip().endswith('HIL-DD'):
         os.chdir('./backend/')
         print('changed back to', os.popen('cd').read())
-    # while True:
-    #     if os.path.isfile(proposal_json):
-    #         print(f"loading {proposal_json}")
-    #         with open(proposal_json, 'r') as f:
-    #             proposals = json.load(f)
-    #         dst = os.path.join(proposal_dir, f'proposals_{len(os.listdir(proposal_dir))}.json')
-    #         os.rename(proposal_json, dst)
-    #         break
-    # return HttpResponse(output)
-    return redirect(f"/api/getMoleculeList/?timestamp={logdir}&pdb={pdb}")
-    # return JsonResponse(proposals)
+
+    # return redirect(f"/api/getMoleculeList/?timestamp={logdir}&pdb={pdb}")
+    return sendMoleculeList(request)
 
 
 def sendMoleculeList(request):
