@@ -56,7 +56,7 @@ def getTimePDB(request):
     proposal_json = os.path.join(proposal_dir, 'proposals.json')
     print(os.path.isfile(proposal_json), proposal_json, proposal_dir)
     print('starting a human-in-the-loop drug design program which is driven by preference learning')
-    output = os.popen('cd').read()
+    output = os.getcwd()
     print('current dir', output)
     if not output.endswith('HIL-DD'):
         os.chdir('../')
@@ -70,7 +70,7 @@ def getTimePDB(request):
     time.sleep(20)
     Popen(['python3', 'HIL_DD_ui_evaluation.py', logdir, pdb], shell=False,
           close_fds=True)#, creationflags=DETACHED_PROCESS)
-    output = os.popen('cd').read()
+    output = os.getcwd()
     if output.strip().endswith('HIL-DD'):
         os.chdir('./backend/')
         print('changed back to', os.popen('cd').read())
@@ -84,8 +84,8 @@ def sendMoleculeList(request):
     pdb = request.GET.get('pdb')
     print('sendMoleculeList', logdir)
     print(pdb)
-    proposal_dir = 'app01/static/' + logdir + '/proposals/'
-    annotation_dir = 'app01/static/' + logdir + '/annotations/'
+    proposal_dir = './app01/static/' + logdir + '/proposals/'
+    annotation_dir = './app01/static/' + logdir + '/annotations/'
     os.makedirs(annotation_dir, exist_ok=True)
     annotation_json = os.path.join(annotation_dir, 'annotations.json')
     proposal_json = os.path.join(proposal_dir, 'proposals.json')
