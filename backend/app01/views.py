@@ -99,22 +99,23 @@ def sendMoleculeList(request):
             # dst = os.path.join(proposal_dir, f'proposals_{len(os.listdir(proposal_dir))}.json')
             # shutil.move(proposal_json, dst)
             break
-    next_mols = proposals['next_molecules']
-    like, dislike = [], []
-    for i in range(len(next_mols)):
-        metrics = next_mols[i]['metrics']
-        vina = metrics['Vina']
-        if vina <= -8:
-            like.append(i)
-        elif vina > -7:
-            dislike.append(i)
-    annotations = {'time_stamp': logdir,
-         'like_ids': like,
-         'dislike_ids': dislike}
-    print('like list', like)
-    print('dislike list', dislike)
-    with open(annotation_json, "w") as outfile:
-        json.dump(annotations, outfile, indent=2)
+    if request.GET.get('sim'):
+        next_mols = proposals['next_molecules']
+        like, dislike = [], []
+        for i in range(len(next_mols)):
+            metrics = next_mols[i]['metrics']
+            vina = metrics['Vina']
+            if vina <= -8:
+                like.append(i)
+            elif vina > -7:
+                dislike.append(i)
+        annotations = {'time_stamp': logdir,
+             'like_ids': like,
+             'dislike_ids': dislike}
+        print('like list', like)
+        print('dislike list', dislike)
+        with open(annotation_json, "w") as outfile:
+            json.dump(annotations, outfile, indent=2)
     # if os.path.isfile(proposal_json):
     #     print(f'removing {proposal_json}')
     #     os.remove(proposal_json)
