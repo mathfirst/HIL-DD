@@ -60,7 +60,7 @@ def getTimePDB(request):
     print('current dir', output)
     if not output.endswith('HIL-DD'):
         os.chdir('../')
-        output = os.popen('cd').read()
+        output = os.getcwd()
         print('after changing dir', output)
     Popen(['python3', 'HIL_DD_ui_proposals.py', logdir, pdb], shell=False,
           close_fds=True)#, creationflags=DETACHED_PROCESS)
@@ -73,7 +73,7 @@ def getTimePDB(request):
     output = os.getcwd()
     if output.strip().endswith('HIL-DD'):
         os.chdir('./backend/')
-        print('changed back to', os.popen('cd').read())
+        print('changed back to', os.getcwd())
 
     # return redirect(f"/api/getMoleculeList/?timestamp={logdir}&pdb={pdb}")
     return sendMoleculeList(request)
@@ -128,8 +128,8 @@ def evaluation(request):
     pdb = request.GET.get('pdb')
     print(timestamp)
     print(pdb)
-    eval_dir = '../logs/' + timestamp + '/evaluation/'
-    evaluation_json = '../logs/' + timestamp + '/evaluation/' + 'evaluation.json'
+    eval_dir = './app01/static/' + timestamp + '/evaluation/'
+    evaluation_json = eval_dir + 'evaluation.json'
     while True:
         if os.path.isfile(evaluation_json):
             print(f"loading {evaluation_json}")

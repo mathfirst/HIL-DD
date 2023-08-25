@@ -212,10 +212,11 @@ if __name__ == '__main__':
     proposal_base_dict = {'mol_list': []}
     num_proposals_ui = 8
     num_total_positive_annotations = num_total_negative_annotations = 0
-    annotation_dir = os.path.join(log_dir, 'annotations')
+    static_dir = f'backend/app01/static/{args.params[0]}/'
+    annotation_dir = os.path.join(static_dir, 'annotations')
     os.makedirs(annotation_dir, exist_ok=True)
     annotation_path = os.path.join(annotation_dir, 'annotations.json')
-    proposals_dir = os.path.join(f'backend/app01/static/{args.params[0]}/', 'proposals')
+    proposals_dir = os.path.join(static_dir, 'proposals')
     os.makedirs(proposals_dir, exist_ok=True)
     proposals_path = os.path.join(proposals_dir, 'proposals.json')
     pt_dir = os.path.join(log_dir, 'final_pt_files')
