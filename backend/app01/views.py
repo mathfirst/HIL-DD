@@ -84,8 +84,8 @@ def sendMoleculeList(request):
     pdb = request.GET.get('pdb')
     print('sendMoleculeList', logdir)
     print(pdb)
-    proposal_dir = '../logs/' + logdir + '/proposals/'
-    annotation_dir = '../logs/' + logdir + '/annotations/'
+    proposal_dir = 'app01/static/' + logdir + '/proposals/'
+    annotation_dir = 'app01/static/' + logdir + '/annotations/'
     os.makedirs(annotation_dir, exist_ok=True)
     annotation_json = os.path.join(annotation_dir, 'annotations.json')
     proposal_json = os.path.join(proposal_dir, 'proposals.json')
