@@ -82,7 +82,7 @@ def getTimePDB(request):
 def sendMoleculeList(request):
     logdir = request.GET.get('timestamp')
     pdb = request.GET.get('pdb')
-    print(logdir)
+    print('sendMoleculeList', logdir)
     print(pdb)
     proposal_dir = '../logs/' + logdir + '/proposals/'
     annotation_dir = '../logs/' + logdir + '/annotations/'

@@ -227,7 +227,7 @@ if __name__ == '__main__':
     annotation_dir = os.path.join(log_dir, 'annotations')
     os.makedirs(annotation_dir, exist_ok=True)
     annotation_path = os.path.join(annotation_dir, 'annotations.json')
-    proposals_dir = os.path.join(log_dir, 'proposals')
+    proposals_dir = os.path.join('backend/app01/static/', 'proposals')
     os.makedirs(proposals_dir, exist_ok=True)
     proposals_path = os.path.join(proposals_dir, 'proposals.json')
     pt_dir = os.path.join(log_dir, 'final_pt_files')
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     for num_inj in range(1000):
         proposal_base_dict = {}
         logger.info(f"{num_inj}, generating proposals...")
-        proposals = sampling_val(model_pref, pocket_data, pocket_idx, pos_scale, log_dir,
+        proposals = sampling_val(model_pref, pocket_data, pocket_idx, pos_scale, 'backend/app01/static/proposals/',
                                  logger, device, ProteinElement2IndexDict, num_timesteps=num_timesteps, mode=mode,
                                  num_pockets=pocket_idx, all_val_pockets=False, bond_emb=True,
                                  num_samples=num_samples_eval, cal_vina_score=True,

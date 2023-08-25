@@ -198,7 +198,7 @@ if __name__ == '__main__':
         cls_fn = None
     ckp_time = ''
     ckp_path = os.path.join(log_dir, 'model.pt')
-    evaluation_dir = os.path.join(log_dir, 'evaluation')
+    evaluation_dir = os.path.join('backend/app01/static/', 'evaluation')
     os.makedirs(evaluation_dir, exist_ok=True)
     evaluation_path = os.path.join(evaluation_dir, 'evaluation.json')
     t0 = time.time()
