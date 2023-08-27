@@ -203,8 +203,8 @@ if __name__ == '__main__':
     evaluation_path = os.path.join(evaluation_dir, 'evaluation.json')
     t0 = time.time()
     while True:
-        if time.time() - t0 > 30*60:
-            logger.info(f"You have made no operations during the past 30 minutes. Exiting...")
+        if time.time() - t0 > 20*60:
+            logger.info(f"You have made no operations during the past 20 minutes. Exiting...")
             sys.exit()
         if os.path.isfile(ckp_path):
             while True:

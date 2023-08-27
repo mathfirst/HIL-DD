@@ -239,7 +239,7 @@ if __name__ == '__main__':
             os.remove(pt_path)
     t0 = time.time()
     for num_inj in range(10000):
-        if time.time() - t0 > 30*60:
+        if time.time() - t0 > 10*60:
             logger.info(f"You have made no operations during the past 30 minutes. Exiting...")
             sys.exit()
         while True:

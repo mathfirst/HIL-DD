@@ -231,6 +231,7 @@ if __name__ == '__main__':
     os.makedirs(proposals_dir, exist_ok=True)
     pt_dir = os.path.join(log_dir, 'final_pt_files')
     os.makedirs(pt_dir, exist_ok=True)
+    t0 = time.time()
     for num_inj in range(1000):
         proposal_base_dict = {}
         logger.info(f"{num_inj}, generating proposals...")
@@ -244,6 +245,6 @@ if __name__ == '__main__':
                                  protein_pdbqt_dir='configs/test_protein')
         shutil.move(proposals.pt_filename, os.path.join(pt_dir, f'proposal_{num_inj}.pt'))
 
-        if os.path.isfile(os.path.join(log_dir, 'exit.txt')):
+        if os.path.isfile(os.path.join(log_dir, 'exit.txt')) or time.time() - t0 > 10*60:
             logger.info('Manually exiting...')
             sys.exit()
