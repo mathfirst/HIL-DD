@@ -93,6 +93,8 @@ def sendMoleculeList(request):
     while True:
         if os.path.isfile(proposal_json):
             print(f"loading {proposal_json}")
+            os.system('django-admin collectstatic')
+            print('django-admin collectstatic is done.')
             time.sleep(0.1)
             with open(proposal_json, 'r') as f:
                 proposals = json.load(f)
