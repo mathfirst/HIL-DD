@@ -27,3 +27,7 @@ urlpatterns = [
     path("api/feedback/", views.evaluation),
     path("test/", views.test),
 ]
+
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
+urlpatterns += staticfiles_urlpatterns()
