@@ -240,7 +240,7 @@ if __name__ == '__main__':
     t0 = time.time()
     for num_inj in range(10000):
         if time.time() - t0 > 10*60:
-            logger.info(f"You have made no operations during the past 30 minutes. Exiting...")
+            logger.info(f"You have made no operations during the past 10 minutes. Exiting...")
             sys.exit()
         while True:
             get_proposals(pt_dir, proposal_base_dict, logger=logger.info)
