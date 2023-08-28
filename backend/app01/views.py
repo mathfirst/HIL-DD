@@ -34,11 +34,13 @@ def getPDBList(request):
 
 def getAnnotations(request):
     if request.method == 'POST':
-        time_stamp = request.POST.get('time_stamp')
+        timestamp = request.POST.get('time_stamp')
         like_ids = request.POST.get('liked_ids')
         dislike_ids = request.POST.get('disliked_ids')
         annotation_dict = {'liked_ids': like_ids, 'disliked_ids': dislike_ids}
-        annotation_path = os.path.join('../logs/annotations/', 'annotations.json')
+        annotation_dir = './app01/static/' + timestamp + '/annotations/'
+        os.makedirs(annotation_dir, exist_ok=True)
+        annotation_path = os.path.join(annotation_dir, 'annotations.json')
         with open(annotation_path, "w") as outfile:
             json.dump(annotation_dict, outfile, indent=2)
         return HttpResponse('receieved')
@@ -51,10 +53,6 @@ def getTimePDB(request):
     pdb = request.GET.get('pdb')
     print(logdir)
     print(pdb)
-    proposal_dir = '../logs/' + logdir + '/proposals/'
-    os.makedirs(proposal_dir, exist_ok=True)
-    proposal_json = os.path.join(proposal_dir, 'proposals.json')
-    print(os.path.isfile(proposal_json), proposal_json, proposal_dir)
     print('starting a human-in-the-loop drug design program which is driven by preference learning')
     output = os.getcwd()
     print('current dir', output)
@@ -80,12 +78,12 @@ def getTimePDB(request):
 
 
 def sendMoleculeList(request):
-    logdir = request.GET.get('timestamp')
+    timestamp = request.GET.get('timestamp')
     pdb = request.GET.get('pdb')
-    print('sendMoleculeList', logdir)
+    print('sendMoleculeList', timestamp)
     print(pdb)
-    proposal_dir = './app01/static/' + logdir + '/proposals/'
-    annotation_dir = './app01/static/' + logdir + '/annotations/'
+    proposal_dir = './app01/static/' + timestamp + '/proposals/'
+    annotation_dir = './app01/static/' + timestamp + '/annotations/'
     os.makedirs(annotation_dir, exist_ok=True)
     annotation_json = os.path.join(annotation_dir, 'annotations.json')
     proposal_json = os.path.join(proposal_dir, 'proposals.json')
