@@ -22,7 +22,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/pdb/", views.getPDBList),
     path("api/confirmpdb/", views.getTimePDB),
-    path("api/getMoleculeList/", views.sendMoleculeList),
+    path("api/preference/", views.sendMoleculeList),
     path("api/sendAnnotations/", views.getAnnotations),
     path("api/feedback/", views.evaluation),
     path("test/", views.test),
