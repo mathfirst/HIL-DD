@@ -60,13 +60,13 @@ def getTimePDB(request):
         os.chdir('../')
         output = os.getcwd()
         print('after changing dir', output)
-    Popen(['python3', 'HIL_DD_ui_proposals.py', logdir, pdb], shell=False,
+    Popen(['python3', 'HIL_DD_ui_proposals.py', logdir, pdb, '--device cuda:1'], shell=False,
           close_fds=True)#, creationflags=DETACHED_PROCESS)
     time.sleep(30)
-    Popen(['python3', 'HIL_DD_ui_learning.py', logdir, pdb], shell=False,
+    Popen(['python3', 'HIL_DD_ui_learning.py', logdir, pdb, '--device cuda:2'], shell=False,
           close_fds=True)#, creationflags=DETACHED_PROCESS)
     time.sleep(20)
-    Popen(['python3', 'HIL_DD_ui_evaluation.py', logdir, pdb], shell=False,
+    Popen(['python3', 'HIL_DD_ui_evaluation.py', logdir, pdb, '--device cuda:3'], shell=False,
           close_fds=True)#, creationflags=DETACHED_PROCESS)
     output = os.getcwd()
     if output.strip().endswith('HIL-DD'):
