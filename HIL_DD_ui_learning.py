@@ -272,7 +272,6 @@ if __name__ == '__main__':
                 shutil.move(proposals_path, os.path.join(proposals_dir, f"proposals_{len(os.listdir(proposals_dir))}.json"))
                 if os.path.isfile(annotation_path):
                     os.remove(annotation_path)
-                # break
             if num_total_positive_annotations >= 2 and num_total_negative_annotations >= 2:
                 logger.info(f"Number of total annotations: {num_total_positive_annotations + num_total_negative_annotations}")
                 logger.info(f"No. of positive annotations: {num_total_positive_annotations}")
@@ -283,7 +282,7 @@ if __name__ == '__main__':
                 proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
                               num_total_negative_annotations, num_inj, num_proposals_ui)
             else:
-                if time.time() - t0 > 30*60:
+                if time.time() - t0 > 20*60:
                     logger.info(f"AI has waited over half an hour. Exiting...")
                     sys.exit()
                 logger.info("The learning will start only if at least 2 positive samples and 2 negative samples are available.")
