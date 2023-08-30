@@ -109,7 +109,7 @@ def sendMoleculeList(request):
                 like.append(i)
             elif vina > -7:
                 dislike.append(i)
-        annotations = {'time_stamp': logdir,
+        annotations = {'time_stamp': timestamp,
              'like_ids': like,
              'dislike_ids': dislike}
         print('like list', like)
@@ -145,5 +145,5 @@ def evaluation(request):
 
 
 def login(request):
-
+    print('entering login')
     return render(request, 'login.html')
