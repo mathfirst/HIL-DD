@@ -134,7 +134,7 @@ if __name__ == '__main__':
     MAEloss_func = torch.nn.L1Loss(reduction='mean')
     if not args.pdb_id:
         args.pdb_id = args.params[1]
-    pocket_idx = int(PDB_dict[args.pdb_id.upper()])
+    pocket_idx = int(PDB_dict[args.pdb_id.upper()])  # convert index to a 4-character PDB ID
     logger.info(f"loading the data of PDB {args.pdb_id.upper()}")
     pocket_data = torch.load('configs/test_data_list.pt', map_location=device)[pocket_idx]
     protein_pos_val, protein_ele_val, protein_amino_acid_val, protein_is_backbone_val, ligand_pos_val, _ \
