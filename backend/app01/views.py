@@ -78,8 +78,8 @@ def getTimePDB(request):
 
 
 def sendMoleculeList(request):
-    timestamp = request.GET.post('timestamp')
-    pdb = request.GET.post('pdb')
+    timestamp = request.POST.get('timestamp')
+    pdb = request.POST.get('pdb')
     print('sendMoleculeList', timestamp)
     print(pdb)
     proposal_dir = './app01/static/' + timestamp + '/proposals/'
