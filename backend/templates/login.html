@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+<div class="box">
+    <h2>Login</h2>
+    <form action="/api/preference/", method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="user">timestamp</label>
+            <input type="text", class="form-control", id="user", name="timestamp", placeholder="timestamp">
+        </div>
+
+        <div class="form-group">
+            <label for="pwd">pdb id</label>
+            <input type="password", class="form-control", id="pwd", name="pdb", placeholder="pdb id">
+        </div>
+
+        <input type="submit", class="btn btn-primary", name="submit">
+<!--        <span style="color: red;">{{ error }}</span>-->
+    </form>
+</div>
+</body>
+</html>
+
+<!--{% load static %}-->
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <title>Title</title>-->
+<!--    <link rel="stylesheet" href={% static "plugins/bootstrap/css/bootstrap.css" %}>-->
+<!--    <style>-->
+<!--        .box {-->
+<!--            width: 400px;-->
+<!--            margin-top: 100px;-->
+<!--            margin-left: auto;-->
+<!--            margin-right: auto;-->
+<!--            border: 1px solid #dddddd;-->
+<!--            border-radius: 5px;-->
+<!--            padding-left: 30px;-->
+<!--            padding-right: 30px;-->
+<!--            padding-bottom: 30px;-->
+<!--            -webkit-box-shadow: 10px 10px 10px rgb(0 0 0 / 5%);-->
+<!--            box-shadow: 10px 10px 10px rgb(0 0 0 / 5%);-->
+<!--        }-->
+
+<!--        .box h2 {-->
+<!--            text-align: center;-->
+<!--            margin-bottom: 20px;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div class="box">-->
+<!--    <h2>Login</h2>-->
+<!--    <form action="/login/", method="post">-->
+<!--        {% csrf_token %}-->
+<!--        <div class="form-group">-->
+<!--            <label for="user">username</label>-->
+<!--            <input type="text", class="form-control", id="user", name="username", placeholder="username">-->
+<!--        </div>-->
+
+<!--        <div class="form-group">-->
+<!--            <label for="pwd">password</label>-->
+<!--            <input type="password", class="form-control", id="pwd", name="password", placeholder="password">-->
+<!--        </div>-->
+
+<!--        <input type="submit", class="btn btn-primary", name="submit">-->
+<!--        <span style="color: red;">{{ error }}</span>-->
+<!--    </form>-->
+<!--</div>-->
+
+<!--<script src="js/jquery-3.7.0.min.js"></script>-->
+<!--</body>-->
+<!--</html>-->

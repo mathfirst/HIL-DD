@@ -142,3 +142,8 @@ def evaluation(request):
 
     return JsonResponse(evaluation_samples)
     # return HttpResponse('success')
+
+
+def login(request):
+
+    return render(request, 'login.html')
