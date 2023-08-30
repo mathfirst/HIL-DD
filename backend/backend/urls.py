@@ -26,5 +26,6 @@ urlpatterns = [
     path("api/sendAnnotations/", views.getAnnotations),
     path("api/feedback/", views.evaluation),
     path("test/", views.test),
+    path("login/", views.login),
 ]
 
