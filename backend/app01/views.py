@@ -5,8 +5,11 @@ from django.shortcuts import render, HttpResponse, redirect
 from django.http import JsonResponse
 import os, subprocess, json
 from subprocess import Popen
+
 DETACHED_PROCESS = 0x00000008
 from sys import platform
+
+
 # sys.path.append('../../../HIL-DD')
 # Create your views here.
 
@@ -34,24 +37,24 @@ def getPDBList(request):
 
 def getAnnotations(request):
     if request.method == 'POST':
-        timestamp = request.POST.get('time_stamp')
+        timestamp = str(request.POST.get('time_stamp'))
         like_ids = request.POST.get('liked_ids')
         dislike_ids = request.POST.get('disliked_ids')
         annotation_dict = {'liked_ids': like_ids, 'disliked_ids': dislike_ids}
-        annotation_dir = './app01/static/' + timestamp + '/annotations/'
+        annotation_dir = os.path.join('./app01/static/', timestamp, 'annotations')
         os.makedirs(annotation_dir, exist_ok=True)
         annotation_path = os.path.join(annotation_dir, 'annotations.json')
         with open(annotation_path, "w") as outfile:
             json.dump(annotation_dict, outfile, indent=2)
-        return HttpResponse('receieved')
+        return HttpResponse('received')
     else:
-        return HttpResponse('not receieved')
+        return HttpResponse('not received')
 
 
 def getTimePDB(request):
-    logdir = request.GET.get('timestamp')
-    pdb = request.GET.get('pdb')
-    print(logdir)
+    timestamp = str(request.POST.get('timestamp'))
+    pdb = str(request.POST.get('pdb'))
+    print(timestamp)
     print(pdb)
     print('starting a human-in-the-loop drug design program which is driven by preference learning')
     output = os.getcwd()
@@ -60,14 +63,14 @@ def getTimePDB(request):
         os.chdir('../')
         output = os.getcwd()
         print('after changing dir', output)
-    Popen(['python3', 'HIL_DD_ui_proposals.py', logdir, pdb, '--device cuda:1'], shell=False,
-          close_fds=True)#, creationflags=DETACHED_PROCESS)
+    Popen(['python3', 'HIL_DD_ui_proposals.py', timestamp, pdb, '--device cuda:1'], shell=False,
+          close_fds=True)  # , creationflags=DETACHED_PROCESS)
     time.sleep(30)
-    Popen(['python3', 'HIL_DD_ui_learning.py', logdir, pdb, '--device cuda:2'], shell=False,
-          close_fds=True)#, creationflags=DETACHED_PROCESS)
+    Popen(['python3', 'HIL_DD_ui_learning.py', timestamp, pdb, '--device cuda:2'], shell=False,
+          close_fds=True)  # , creationflags=DETACHED_PROCESS)
     time.sleep(20)
-    Popen(['python3', 'HIL_DD_ui_evaluation.py', logdir, pdb, '--device cuda:3'], shell=False,
-          close_fds=True)#, creationflags=DETACHED_PROCESS)
+    Popen(['python3', 'HIL_DD_ui_evaluation.py', timestamp, pdb, '--device cuda:3'], shell=False,
+          close_fds=True)  # , creationflags=DETACHED_PROCESS)
     output = os.getcwd()
     if output.strip().endswith('HIL-DD'):
         os.chdir('./backend/')
@@ -78,12 +81,12 @@ def getTimePDB(request):
 
 
 def sendMoleculeList(request):
-    timestamp = request.POST.get('timestamp')
-    pdb = request.POST.get('pdb')
+    timestamp = str(request.POST.get('timestamp'))
+    pdb = str(request.POST.get('pdb'))
     print('sendMoleculeList', timestamp)
     print(pdb)
-    proposal_dir = './app01/static/' + timestamp + '/proposals/'
-    annotation_dir = './app01/static/' + timestamp + '/annotations/'
+    proposal_dir = os.path.join('./app01/static/', timestamp, 'proposals')
+    annotation_dir = os.path.join('./app01/static/', timestamp, 'annotations')
     os.makedirs(annotation_dir, exist_ok=True)
     annotation_json = os.path.join(annotation_dir, 'annotations.json')
     proposal_json = os.path.join(proposal_dir, 'proposals.json')
@@ -110,8 +113,8 @@ def sendMoleculeList(request):
             elif vina > -7:
                 dislike.append(i)
         annotations = {'time_stamp': timestamp,
-             'like_ids': like,
-             'dislike_ids': dislike}
+                       'like_ids': like,
+                       'dislike_ids': dislike}
         print('like list', like)
         print('dislike list', dislike)
         with open(annotation_json, "w") as outfile:
@@ -125,12 +128,12 @@ def sendMoleculeList(request):
 
 
 def evaluation(request):
-    timestamp = request.GET.get('timestamp')
-    pdb = request.GET.get('pdb')
+    timestamp = str(request.GET.get('timestamp'))
+    pdb = str(request.GET.get('pdb'))
     print(timestamp)
     print(pdb)
-    eval_dir = './app01/static/' + timestamp + '/evaluation/'
-    evaluation_json = eval_dir + 'evaluation.json'
+    eval_dir = os.path.join('./app01/static/', timestamp, 'evaluation')
+    evaluation_json = os.path.join(eval_dir, 'evaluation.json')
     while True:
         if os.path.isfile(evaluation_json):
             print(f"loading {evaluation_json}")
