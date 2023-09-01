@@ -39,7 +39,7 @@ if __name__ == '__main__':
     os.makedirs(log_dir, exist_ok=True)
     log_filename = os.path.join(log_dir, "log.txt")
     logger = get_logger('train', log_filename)
-    logger.info('pdb_path:', str(args.pdb_path))
+    logger.info(f'pdb_path: {args.pdb_path}')
     shutil.copy(args.config, os.path.join(log_dir, 'config-' + current_time + '.yml'))
     current_file = __file__  # get the name of the currently executing python file
     shutil.copy(current_file, os.path.join(log_dir, os.path.basename(current_file).split('.')[0] + '-' + '.py'))
