@@ -481,6 +481,27 @@ def find_benzene_rings(smiles):
         return False
 
 
+def find_substructure(smiles, smarts):
+    '''
+    Args:
+        smiles:
+        smarts: 1. benzene ring: 'c1ccccc1'; 2. fused benzene ring: 'c12ccccc1cccc2
+                3. benzene ring fused with a 6-member ring containing 2 nitrogens: 'c12ccccc1cncn2'
+    Returns: a boolean
+    '''
+    pattern = Chem.MolFromSmarts(smarts)
+    try:
+        mol = Chem.MolFromSmiles(smiles)
+        state = mol.HasSubstructMatch(pattern)
+        return state
+    except Exception as err:
+        print(err)
+        return False
+
+
+
+
+
 def find_large_ring(mol, size=7):
     '''
     The input is rdkit mol and the output is a boolean variable.
