@@ -485,8 +485,11 @@ def find_substructure(smiles, smarts):
     '''
     Args:
         smiles:
-        smarts: 1. benzene ring: 'c1ccccc1'; 2. fused benzene ring: 'c12ccccc1cccc2
-                3. benzene ring fused with a 6-member ring containing 2 nitrogens: 'c12ccccc1cncn2'
+        smarts: 1. benzene ring: 'c1ccccc1';
+                2. fused benzene ring: 'c12ccccc1cccc2
+                3. benzene ring fused with a 6-member ring containing 2 nitrogens: 'c12ccccc1cncn2',
+                   e.g. Gefitinib, Erlotinib
+                4. 'c1ccccc1Nc2ncccn2', e.g. Osimertinib, Olmutinib (3rd generation)
     Returns: a boolean
     '''
     pattern = Chem.MolFromSmarts(smarts)
