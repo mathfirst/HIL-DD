@@ -3,6 +3,7 @@ import time
 
 from django.shortcuts import render, HttpResponse, redirect
 from django.http import JsonResponse
+from django.middleware.csrf import get_token
 import os, subprocess, json
 from subprocess import Popen
 
@@ -32,7 +33,7 @@ def getPDBList(request):
                          'name': j,
                          'url': f'full_pdb/protein_{j}.pdb'})
 
-    return JsonResponse({'pdb_list': pdb_list})
+    return JsonResponse({'pdb_list': pdb_list, 'token': get_token(request)})
 
 
 def getAnnotations(request):
