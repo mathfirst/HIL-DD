@@ -54,7 +54,7 @@ def getAnnotations(request):
 
 def getTimePDB(request):
     timestamp = str(request.POST.get('timestamp'))
-    pdb = str(request.POST.get('pdb'))
+    pdb = str(request.POST.get('pdb_id'))
     print(timestamp)
     print(pdb)
     print('starting a human-in-the-loop drug design program which is driven by preference learning')
@@ -78,18 +78,27 @@ def getTimePDB(request):
         print('changed back to', os.getcwd())
 
     # return redirect(f"/api/getMoleculeList/?timestamp={logdir}&pdb={pdb}")
-    return sendMoleculeList(request)
+    return sendMoleculeList(request, True)
 
 
-def sendMoleculeList(request):
+def sendMoleculeList(request, start=False):
     timestamp = str(request.POST.get('timestamp'))
-    pdb = str(request.POST.get('pdb'))
+    if start:
+        print('starting a task...')
+    else:
+        print('getting annotations...')
+        like_ids = request.POST.get('liked_ids')
+        dislike_ids = request.POST.get('disliked_ids')
+        annotation_dict = {'liked_ids': like_ids, 'disliked_ids': dislike_ids}
+        annotation_dir = os.path.join('./app01/static/', timestamp, 'annotations')
+        os.makedirs(annotation_dir, exist_ok=True)
+        annotation_path = os.path.join(annotation_dir, 'annotations.json')
+        with open(annotation_path, "w") as outfile:
+            json.dump(annotation_dict, outfile, indent=2)
+    pdb = str(request.POST.get('pdb_id'))
     print('sendMoleculeList', timestamp)
     print(pdb)
     proposal_dir = os.path.join('./app01/static/', timestamp, 'proposals')
-    annotation_dir = os.path.join('./app01/static/', timestamp, 'annotations')
-    os.makedirs(annotation_dir, exist_ok=True)
-    annotation_json = os.path.join(annotation_dir, 'annotations.json')
     proposal_json = os.path.join(proposal_dir, 'proposals.json')
     print(os.path.abspath(proposal_json))
     while True:
@@ -100,26 +109,27 @@ def sendMoleculeList(request):
             time.sleep(0.1)
             with open(proposal_json, 'r') as f:
                 proposals = json.load(f)
-            # dst = os.path.join(proposal_dir, f'proposals_{len(os.listdir(proposal_dir))}.json')
-            # shutil.move(proposal_json, dst)
             break
-    if request.GET.get('sim'):
-        next_mols = proposals['next_molecules']
-        like, dislike = [], []
-        for i in range(len(next_mols)):
-            metrics = next_mols[i]['metrics']
-            vina = metrics['Vina']
-            if vina <= -8:
-                like.append(i)
-            elif vina > -7:
-                dislike.append(i)
-        annotations = {'time_stamp': timestamp,
-                       'like_ids': like,
-                       'dislike_ids': dislike}
-        print('like list', like)
-        print('dislike list', dislike)
-        with open(annotation_json, "w") as outfile:
-            json.dump(annotations, outfile, indent=2)
+    # annotation_dir = os.path.join('./app01/static/', timestamp, 'annotations')
+    # os.makedirs(annotation_dir, exist_ok=True)
+    # annotation_json = os.path.join(annotation_dir, 'annotations.json')
+    # if request.GET.get('sim'):
+    #     next_mols = proposals['next_molecules']
+    #     like, dislike = [], []
+    #     for i in range(len(next_mols)):
+    #         metrics = next_mols[i]['metrics']
+    #         vina = metrics['Vina']
+    #         if vina <= -8:
+    #             like.append(i)
+    #         elif vina > -7:
+    #             dislike.append(i)
+    #     annotations = {'time_stamp': timestamp,
+    #                    'like_ids': like,
+    #                    'dislike_ids': dislike}
+    #     print('like list', like)
+    #     print('dislike list', dislike)
+    #     with open(annotation_json, "w") as outfile:
+    #         json.dump(annotations, outfile, indent=2)
     # if os.path.isfile(proposal_json):
     #     print(f'removing {proposal_json}')
     #     os.remove(proposal_json)
