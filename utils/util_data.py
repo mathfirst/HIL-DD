@@ -382,7 +382,7 @@ def perterb_X0(**kwargs):
     batch = get_batch_vec(X0_pos.shape[0], batch_size)
     noise = torch.randn(X0_pos.shape[0] * batch_size, X0_pos.shape[1], device=X0_pos.device)
     X0_pos = signal_level * X0_pos.repeat(batch_size, 1) + noise_level * noise
-    X0_pos = subtract_mean(X0_pos, batch=batch)
+    X0_pos = subtract_mean(X0_pos, batch=batch.to(X0_pos.device))
     noise = torch.randn(X0_element_embedding.shape[0] * batch_size, X0_element_embedding.shape[1],
                         device=X0_element_embedding.device)
     X0_element_embedding = signal_level * X0_element_embedding.repeat(batch_size, 1) + noise_level * noise
