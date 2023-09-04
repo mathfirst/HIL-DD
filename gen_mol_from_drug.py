@@ -41,7 +41,7 @@ if __name__ == '__main__':
     parser.add_argument('--sdf', type=str, default='')
     args = parser.parse_args()
     config = load_config(args.config)
-    pocket_dict = PDBProtein(args.pdb_path).to_dict_atom()
+    pocket_dict = PDBProtein(args.pdb).to_dict_atom()
     data = Data()
     for k, v in torchify_dict(pocket_dict).items():
         data['protein_' + k] = v
@@ -160,9 +160,9 @@ if __name__ == '__main__':
     # print(torch.allclose(X0_pos.cpu(), calculator_pref.result_dict['X0_pos_list'][-1]), f"norm: {torch.norm(X0_pos.cpu()-calculator_pref.result_dict['X0_pos_list'][-1]):.3f}")
     # print(torch.allclose(X0_ele_feat.cpu(), calculator_pref.result_dict['X0_ele_emb_list'][-1]), f"norm: {torch.norm(X0_ele_feat.cpu()-calculator_pref.result_dict['X0_ele_emb_list'][-1]):.3f}")
     # print(torch.allclose(X0_bond_feat.cpu(), calculator_pref.result_dict['X0_bond_emb_list'][-1]), f"norm: {torch.norm(X0_bond_feat.cpu()-calculator_pref.result_dict['X0_bond_emb_list'][-1]):.3f}")
-    print(measure_straightness(X0_pos.cpu(), z_pos, v_tuple[0], 'l2'))
-    print(measure_straightness(X0_ele_feat.cpu(), z_feat, v_tuple[1], 'l2'))
-    print(measure_straightness(X0_bond_feat.cpu(), ligand_bond_features, v_tuple[2], 'l2'))
+    print("straightness for v_pos:", measure_straightness(X0_pos.cpu(), z_pos, v_tuple[0], 'l1').item())
+    print("straightness for v_ele:", measure_straightness(X0_ele_feat.cpu(), z_feat, v_tuple[1], 'l1').item())
+    print("straightness for v_bond:", measure_straightness(X0_bond_feat.cpu(), ligand_bond_features, v_tuple[2], 'l1').item())
     X1_pos, X1_ele_feat, X1_bond_feat, _ = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
                                                protein_amino_acid=protein_amino_acid,
                                                protein_is_backbone=protein_is_backbone,

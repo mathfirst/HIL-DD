@@ -293,9 +293,9 @@ def measure_straightness(X0, X1, v_ls, method='l1'):
         # print("v_gt", v_gt.shape)
         v = torch.stack(v_ls)
         # print("v", v.shape)
-        straightness = torch.sum(torch.abs(v_gt - v))
+        straightness = torch.mean(torch.abs(v_gt - v))
     elif method == 'l2':
-        straightness = torch.norm(torch.stack(n_steps * [v_gt]) - torch.stack(v_ls).to(v_gt.device))
+        straightness = torch.mean((torch.stack(n_steps * [v_gt]) - torch.stack(v_ls).to(v_gt.device))**2)
     else:
         raise ValueError("We only support 'l1' or 'l2' for method options.")
 

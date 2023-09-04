@@ -609,5 +609,7 @@ def ode(model, protein_pos, protein_ele, protein_amino_acid, protein_is_backbone
                 v_pos.append(pred_pos_v)
                 v_ele.append(pred_ele_v)
                 v_bond.append(pred_bond_v)
-
-    return z_pos, z_feat, bond_features, (v_pos, v_ele, v_bond)
+    if return_v:
+        return z_pos, z_feat, bond_features, (v_pos, v_ele, v_bond)
+    else:
+        return z_pos, z_feat, bond_features
