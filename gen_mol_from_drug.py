@@ -155,7 +155,8 @@ if __name__ == '__main__':
     z_feat = model.get_ligand_features(ligand_ele)
     X0_fn = os.path.join(args.logdir, f"{os.path.basename(args.pdb)[:4]}.pt")
     if os.path.isfile(X0_fn):
-        X0_pos, X0_ele_feat, X0_bond_feat = torch.load(X0_fn, map_location=device)
+        X0_emb = torch.load(X0_fn, map_location=device)
+        X0_pos, X0_ele_feat, X0_bond_feat = X0_emb['X0_pos'], X0_emb['X0_ele'], X0_emb['X0_bond']
     else:
         X0_pos, X0_ele_feat, X0_bond_feat, v_tuple = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
                                                          protein_amino_acid=protein_amino_acid,
