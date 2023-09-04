@@ -136,6 +136,7 @@ def sendMoleculeList(request, start=False):
             time.sleep(0.1)
             with open(proposal_json, 'r') as f:
                 proposals = json.load(f)
+            logger.info(f"proposals: {proposals}")
             break
     # annotation_dir = os.path.join('./app01/static/', timestamp, 'annotations')
     # os.makedirs(annotation_dir, exist_ok=True)
