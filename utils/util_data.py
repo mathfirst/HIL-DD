@@ -244,9 +244,7 @@ def proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotat
 
 
 def evaluation2json(proposal_base_dict, evaluation_path, num_samples, num_likes, num_dislikes):
-    dict_proposals = {'num_likes': num_likes,
-                      'num_dislikes': num_dislikes,
-                      'next_molecules': [],}
+    dict_proposals = {'next_molecules': [], }
     for i in range(num_samples):
         molecule = {'id': i + 1,
                     'smiles': proposal_base_dict['smiles_list'][i],
@@ -374,8 +372,14 @@ def get_batch_vec(elements_per_sample, batch_size):
 
 def perterb_X0(**kwargs):
     batch_size = kwargs['batch_size']
-    noise_level = np.sqrt(kwargs['noise_level'])
-    signal_level = np.sqrt(1.0 - kwargs['noise_level'])
+    if kwargs['noise_type'] == 'VP':
+        noise_level = np.sqrt(kwargs['noise_level'])
+        signal_level = np.sqrt(1.0 - kwargs['noise_level'])
+    elif kwargs['noise_type'] == 'VE':
+        noise_level = kwargs['noise_level']
+        signal_level = 1.0
+    else:
+        raise NotImplementedError(f"Invalid {kwargs['noise_type']}")
     X0_pos = kwargs['X0_pos']
     X0_element_embedding = kwargs['X0_element_embedding']
     X0_bond_embedding = kwargs['X0_bond_embedding']

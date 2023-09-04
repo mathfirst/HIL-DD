@@ -214,8 +214,6 @@ if __name__ == '__main__':
                     logger.info(f"loading is done")
                     if ckp_time != ckp['time'] or not os.path.join(evaluation_path):
                         ckp_time = ckp['time']
-                        num_likes = ckp['num_likes']
-                        num_dislikes = ckp['num_dislikes']
                         t0 = time.time()
                     break
                 except Exception as err:
@@ -241,7 +239,7 @@ if __name__ == '__main__':
 
         # add_more_ls_to_result_dict(calculator_pref.result_dict)
         if len(calculator_pref.result_dict['mol_list']) >= num_samples_eval:
-            evaluation2json(calculator_pref.result_dict, evaluation_path, num_samples_eval, num_likes, num_dislikes)
+            evaluation2json(calculator_pref.result_dict, evaluation_path, num_samples_eval)
         if os.path.isfile(os.path.join(log_dir, 'exit.txt')) or (time.time() - t0 > 30*60):
             logger.info('Manually exiting...')
             sys.exit()

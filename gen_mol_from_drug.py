@@ -185,7 +185,7 @@ if __name__ == '__main__':
                                   drop_unconnected_mol=True, cls_fn=None, s=0, batch_size=100,
                                   guidance_type='BCE', protein_pdbqt_file_path='', X0_pos=X0_pos,
                                   X0_element_embedding=X0_ele_feat, X0_bond_embedding=X0_bond_feat,
-                                  noise_level=0.01, num_atoms=num_ligand_atoms, protein_pdbqt_dir='')
+                                  noise_level=0.0001, num_atoms=num_ligand_atoms, protein_pdbqt_dir='', noise_type='VE')
         # X0_pos_copy, X0_ele_feat_copy, X0_bond_feat_copy = perterb_X0(batch_size=1, X0_pos=X0_pos, X0_element_embedding=X0_ele_feat,
         #                                                               X0_bond_embedding=X0_bond_feat, noise_level=0.1)
         # X1_pos, X1_ele_feat, X1_bond_feat = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
