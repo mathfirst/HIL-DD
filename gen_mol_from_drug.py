@@ -159,21 +159,21 @@ if __name__ == '__main__':
     # print(torch.allclose(X0_pos.cpu(), calculator_pref.result_dict['X0_pos_list'][-1]), f"norm: {torch.norm(X0_pos.cpu()-calculator_pref.result_dict['X0_pos_list'][-1]):.3f}")
     # print(torch.allclose(X0_ele_feat.cpu(), calculator_pref.result_dict['X0_ele_emb_list'][-1]), f"norm: {torch.norm(X0_ele_feat.cpu()-calculator_pref.result_dict['X0_ele_emb_list'][-1]):.3f}")
     # print(torch.allclose(X0_bond_feat.cpu(), calculator_pref.result_dict['X0_bond_emb_list'][-1]), f"norm: {torch.norm(X0_bond_feat.cpu()-calculator_pref.result_dict['X0_bond_emb_list'][-1]):.3f}")
-    logger.info(f"straightness for v_pos: {measure_straightness(X0_pos.cpu(), z_pos, v_tuple[0], 'l1').item()}")
-    logger.info(f"straightness for v_ele: {measure_straightness(X0_ele_feat.cpu(), z_feat, v_tuple[1], 'l1').item()}")
-    logger.info(f"straightness for v_bond: {measure_straightness(X0_bond_feat.cpu(), ligand_bond_features, v_tuple[2], 'l1').item()}")
+    logger.info(f"straightness for v_pos: {measure_straightness(X0_pos.cpu(), z_pos, v_tuple[0], 'l1').item():.2f}")
+    logger.info(f"straightness for v_ele: {measure_straightness(X0_ele_feat.cpu(), z_feat, v_tuple[1], 'l1').item()}:.2f")
+    logger.info(f"straightness for v_bond: {measure_straightness(X0_bond_feat.cpu(), ligand_bond_features, v_tuple[2], 'l1').item():.2f}")
     sdf_path = os.path.join(log_dir, 'SDF')
     os.makedirs(sdf_path, exist_ok=True)
     pt_path = os.path.join(log_dir, 'pt')
     os.makedirs(pt_path, exist_ok=True)
     for i in range(100):
-        X0_pos, X0_ele_feat, X0_bond_feat = perterb_X0(batch_size=1, X0_pos=X0_pos, X0_element_embedding=X0_ele_feat,
+        X0_pos_copy, X0_ele_feat_copy, X0_bond_feat_copy = perterb_X0(batch_size=1, X0_pos=X0_pos, X0_element_embedding=X0_ele_feat,
                                                        X0_bond_embedding=X0_bond_feat, noise_level=0.1)
         X1_pos, X1_ele_feat, X1_bond_feat = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
                                                 protein_amino_acid=protein_amino_acid,
                                                 protein_is_backbone=protein_is_backbone,
-                                                z_pos=X0_pos, z_feat=X0_ele_feat,
-                                                bond_features=X0_bond_feat, bond_edges=bond_edges,
+                                                z_pos=X0_pos_copy, z_feat=X0_ele_feat_copy,
+                                                bond_features=X0_bond_feat_copy, bond_edges=bond_edges,
                                                 device=device, reverse=False, num_timesteps=num_timesteps)
         pred_ele_types = convert_ele_emb2ele_types(model, X1_ele_feat)
         X1_pos_copy = X1_pos / pos_scale + protein_pos_mean.to(device)
