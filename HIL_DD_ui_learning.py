@@ -262,11 +262,15 @@ if __name__ == '__main__':
                     dislike_ls = annotations['disliked_ids']
                 dst = os.path.join(annotation_dir, f'annotations_{num_inj}.json')
                 shutil.move(annotation_path, dst)
-                logger.info(f"Interaction {len(os.listdir(annotation_dir))}, positive annotations: {len(like_ls)}, negative annotations: {len(dislike_ls)}")
+                logger.info(f"Interaction {len(os.listdir(annotation_dir))}, positive annotations: {len(like_ls)}, "
+                            f"negative annotations: {len(dislike_ls)}")
                 num_total_positive_annotations += len(like_ls)
                 num_total_negative_annotations += len(dislike_ls)
                 if os.path.isfile(annotation_path):
                     os.remove(annotation_path)
+                shutil.move(proposals_path,
+                            os.path.join(proposals_dir, f"proposals_{len(os.listdir(proposals_dir))}.json"))
+                time.sleep(0.1)
                 if len(like_ls) + len(dislike_ls) == 0:
                     logger.info("There are no annotations this time.")
                 else:
@@ -291,7 +295,6 @@ if __name__ == '__main__':
                 logger.info("The learning will start only if at least 2 positive samples and 2 negative samples are available.")
                 time.sleep(1)
                 logger.info("waiting for annotations...")
-                # continue
         model_pref.train()
         num_actual_updates = 0
         show_recent_loss_cls = OnlineAveraging(averaging_range=len_history)
