@@ -377,8 +377,7 @@ def calculate_vina_score(rdmol, pocket_id, sdf_filename_path, protein_pdbqt_dir=
     else:
         protein_pdbqt_file_path = os.path.join(protein_pdbqt_dir, 'protein_%d.pdbqt' % pocket_id)
     # 3. use qvina2 to calculate vina score and print the output into a random *.txt
-    fn_txt = os.path.join(temp_dir,
-                          ''.join([random_id, '.txt']))  # ''.join([random_id, '.txt']) #str(uuid.uuid4()) + '.txt'
+    fn_txt = os.path.join(temp_dir, ''.join([random_id, '.txt']))  #
     command = "qvina2 --receptor {receptor_id} \
                     --ligand {ligand_id} \
                     --center_x {center_x} \

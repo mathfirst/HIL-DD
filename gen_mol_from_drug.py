@@ -27,7 +27,7 @@ from torch_geometric.data import Data
 from utils import reconstruct
 from rdkit import Chem
 from utils.evaluate import evaluate_metrics, find_substructure, similarity, calculate_vina_score
-from utils.util_sampling import ode
+from utils.util_sampling import ode, sampling_val
 from utils.analyze import check_stability
 FOLLOW_BATCH = ('protein_element', 'ligand_element', 'ligand_bond_type',)
 
@@ -117,8 +117,8 @@ if __name__ == '__main__':
     subtract_mean = MeanSubtractionNorm()   # This is used to center positions.
     # loading data
 
-    sample_result_dir = os.path.join(log_dir, 'sample-results')
-    os.makedirs(sample_result_dir, exist_ok=True)
+    result_dir = os.path.join(log_dir, 'sample-results')
+    os.makedirs(result_dir, exist_ok=True)
 
     logger.info("building model...")
     model = Model_CoM_free(num_protein_element=len(ProteinElement2IndexDict), num_amino_acid=20,
@@ -178,45 +178,49 @@ if __name__ == '__main__':
     pt_path = os.path.join(log_dir, 'pt')
     os.makedirs(pt_path, exist_ok=True)
     for i in range(100):
-        X0_pos_copy, X0_ele_feat_copy, X0_bond_feat_copy = perterb_X0(batch_size=1, X0_pos=X0_pos, X0_element_embedding=X0_ele_feat,
-                                                                      X0_bond_embedding=X0_bond_feat, noise_level=0.1)
-        X1_pos, X1_ele_feat, X1_bond_feat = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
-                                                protein_amino_acid=protein_amino_acid,
-                                                protein_is_backbone=protein_is_backbone,
-                                                z_pos=X0_pos_copy, z_feat=X0_ele_feat_copy,
-                                                bond_features=X0_bond_feat_copy, bond_edges=bond_edges,
-                                                device=device, reverse=False, num_timesteps=num_timesteps)
-        pred_ele_types = convert_ele_emb2ele_types(model, X1_ele_feat)
-        X1_pos_copy = X1_pos / pos_scale + protein_pos_mean.to(device)
-        try:
-            mol = reconstruct.reconstruct_from_generated(X1_pos_copy.tolist(), pred_ele_types, aromatic=None,
-                                                         basic_mode=True, bond_type=None, bond_index=None)
-            smiles = Chem.MolToSmiles(mol)
-        except Exception as err:
-            logger.info(f"error when reconstructing: {err}")
-        logger.info(f"smiles: {smiles}, smiles_gt: {smiles_drug}")
-        logger.info(f"smilarity: {similarity(mol, mol_drug)}")
-        if '.' not in smiles:
-            r_stable = check_stability(X1_pos, pred_ele_types)
-            logger.info(f"{r_stable}")
+        calculator = sampling_val(model, data, 0, pos_scale, result_dir, logger, device, ProteinElement2IndexDict,
+                                  num_timesteps=num_timesteps, mode='add_aromatic_wo_h', num_samples=10,
+                                  cal_vina_score=False, num_spacing_steps=False, bond_emb=True,
+                                  cal_straightness=False, t_sampling_strategy='uniform',
+                                  drop_unconnected_mol=True, cls_fn=None, s=0, batch_size=100,
+                                  guidance_type='BCE', protein_pdbqt_file_path='', X0_pos=X0_pos,
+                                  X0_element_embedding=X0_ele_feat, X0_bond_embedding=X0_bond_feat,
+                                  noise_level=0.01)
+        # X0_pos_copy, X0_ele_feat_copy, X0_bond_feat_copy = perterb_X0(batch_size=1, X0_pos=X0_pos, X0_element_embedding=X0_ele_feat,
+        #                                                               X0_bond_embedding=X0_bond_feat, noise_level=0.1)
+        # X1_pos, X1_ele_feat, X1_bond_feat = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
+        #                                         protein_amino_acid=protein_amino_acid,
+        #                                         protein_is_backbone=protein_is_backbone,
+        #                                         z_pos=X0_pos_copy, z_feat=X0_ele_feat_copy,
+        #                                         bond_features=X0_bond_feat_copy, bond_edges=bond_edges,
+        #                                         device=device, reverse=False, num_timesteps=num_timesteps)
+        # pred_ele_types = convert_ele_emb2ele_types(model, X1_ele_feat)
+        # X1_pos_copy = X1_pos / pos_scale + protein_pos_mean.to(device)
+        # try:
+        #     mol = reconstruct.reconstruct_from_generated(X1_pos_copy.tolist(), pred_ele_types, aromatic=None,
+        #                                                  basic_mode=True, bond_type=None, bond_index=None)
+        #     smiles = Chem.MolToSmiles(mol)
+        # except Exception as err:
+        #     logger.info(f"error when reconstructing: {err}")
+        for mol_i, (smiles, mol) in enumerate(zip(calculator.result_dict['smiles_list'], calculator.result_dict['mol_list'])):
+            logger.info(f"smiles: {smiles}, smiles_gt: {smiles_drug}")
+            logger.info(f"smilarity: {similarity(mol, mol_drug)}")
+            logger.info(f"{calculator.result_dict['stable_list']}")
             if find_substructure(smiles, 'c1ccccc1Nc2ncccn2'):
                 logger.info(f"c1ccccc1Nc2ncccn2 found!")
             if find_substructure(smiles, 'c12ccccc1cncn2'):
                 logger.info(f"c12ccccc1cncn2 found!")
-        else:
-            logger.info(f"This mol is not connected.")
-            continue
-        mol_path = os.path.join(sdf_path, f'{current_time}_{i}.sdf')
-        try:
-            Chem.MolToMolFile(mol, mol_path)
-            evaluate_metrics(mol, logger=logger.info)
-            torch.save({'mol_path': mol_path,
-                        'smiles': smiles,
-                        'mol': mol,
-                        'X0_pos': X0_pos,
-                        'X0_ele': X0_ele_feat,
-                        'X0_bond': X0_bond_feat}, os.path.join(pt_path, f'{current_time}_{i}.pt'))
-        except Exception as err:
-            logger.info(f"when evaluating: {err}")
+        # mol_path = os.path.join(sdf_path, f'{current_time}_{i}.sdf')
+        # try:
+        #     Chem.MolToMolFile(mol, mol_path)
+        #     evaluate_metrics(mol, logger=logger.info)
+        #     torch.save({'mol_path': mol_path,
+        #                 'smiles': smiles,
+        #                 'mol': mol,
+        #                 'X0_pos': X0_pos,
+        #                 'X0_ele': X0_ele_feat,
+        #                 'X0_bond': X0_bond_feat}, os.path.join(pt_path, f'{current_time}_{i}.pt'))
+        # except Exception as err:
+        #     logger.info(f"when evaluating: {err}")
     # calculate_vina_score(mol, pocket_idx, os.path.join(log_dir, 'test.sdf'))
     sys.exit()
