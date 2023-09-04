@@ -153,18 +153,25 @@ if __name__ == '__main__':
     # print(f"original smiles: {calculator_pref.result_dict['smiles_list'][-1]}")
     z_pos = ligand_pos * pos_scale - protein_pos_mean
     z_feat = model.get_ligand_features(ligand_ele)
-    X0_pos, X0_ele_feat, X0_bond_feat, v_tuple = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
-                                                     protein_amino_acid=protein_amino_acid,
-                                                     protein_is_backbone=protein_is_backbone,
-                                                     z_pos=z_pos, z_feat=z_feat, bond_features=ligand_bond_features,
-                                                     bond_edges=bond_edges, device=device, reverse=True,
-                                                     num_timesteps=num_timesteps, return_v=True)
-    # print(torch.allclose(X0_pos.cpu(), calculator_pref.result_dict['X0_pos_list'][-1]), f"norm: {torch.norm(X0_pos.cpu()-calculator_pref.result_dict['X0_pos_list'][-1]):.3f}")
-    # print(torch.allclose(X0_ele_feat.cpu(), calculator_pref.result_dict['X0_ele_emb_list'][-1]), f"norm: {torch.norm(X0_ele_feat.cpu()-calculator_pref.result_dict['X0_ele_emb_list'][-1]):.3f}")
-    # print(torch.allclose(X0_bond_feat.cpu(), calculator_pref.result_dict['X0_bond_emb_list'][-1]), f"norm: {torch.norm(X0_bond_feat.cpu()-calculator_pref.result_dict['X0_bond_emb_list'][-1]):.3f}")
-    logger.info(f"straightness for v_pos: {measure_straightness(X0_pos.cpu(), z_pos, v_tuple[0], 'l1').item():.2f}")
-    logger.info(f"straightness for v_ele: {measure_straightness(X0_ele_feat.cpu(), z_feat, v_tuple[1], 'l1').item():.2f}")
-    logger.info(f"straightness for v_bond: {measure_straightness(X0_bond_feat.cpu(), ligand_bond_features, v_tuple[2], 'l1').item():.2f}")
+    X0_fn = os.path.join(args.logdir, f"{os.path.basename(args.pdb)[:4]}.pt")
+    if os.path.isfile(X0_fn):
+        X0_pos, X0_ele_feat, X0_bond_feat = torch.load(X0_fn, map_location=device)
+    else:
+        X0_pos, X0_ele_feat, X0_bond_feat, v_tuple = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
+                                                         protein_amino_acid=protein_amino_acid,
+                                                         protein_is_backbone=protein_is_backbone,
+                                                         z_pos=z_pos, z_feat=z_feat, bond_features=ligand_bond_features,
+                                                         bond_edges=bond_edges, device=device, reverse=True,
+                                                         num_timesteps=num_timesteps, return_v=True)
+        torch.save({'X0_pos': X0_pos,
+                    'X0_ele': X0_ele_feat,
+                    'X0_bond': X0_bond_feat}, X0_fn)
+        # print(torch.allclose(X0_pos.cpu(), calculator_pref.result_dict['X0_pos_list'][-1]), f"norm: {torch.norm(X0_pos.cpu()-calculator_pref.result_dict['X0_pos_list'][-1]):.3f}")
+        # print(torch.allclose(X0_ele_feat.cpu(), calculator_pref.result_dict['X0_ele_emb_list'][-1]), f"norm: {torch.norm(X0_ele_feat.cpu()-calculator_pref.result_dict['X0_ele_emb_list'][-1]):.3f}")
+        # print(torch.allclose(X0_bond_feat.cpu(), calculator_pref.result_dict['X0_bond_emb_list'][-1]), f"norm: {torch.norm(X0_bond_feat.cpu()-calculator_pref.result_dict['X0_bond_emb_list'][-1]):.3f}")
+        logger.info(f"straightness for v_pos: {measure_straightness(X0_pos.cpu(), z_pos, v_tuple[0], 'l1').item():.2f}")
+        logger.info(f"straightness for v_ele: {measure_straightness(X0_ele_feat.cpu(), z_feat, v_tuple[1], 'l1').item():.2f}")
+        logger.info(f"straightness for v_bond: {measure_straightness(X0_bond_feat.cpu(), ligand_bond_features, v_tuple[2], 'l1').item():.2f}")
     sdf_path = os.path.join(log_dir, 'SDF')
     os.makedirs(sdf_path, exist_ok=True)
     pt_path = os.path.join(log_dir, 'pt')
