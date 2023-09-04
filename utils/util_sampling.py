@@ -563,3 +563,51 @@ def sample4val_eval(model, val_loader, pos_scale, result_dir, logger, device, Pr
 
         logger.info(f"sampling time: {time_consumption[-1]:.3f}, {np.mean(time_consumption):.3f} \u00B1 "
                     f"{np.std(time_consumption):.2f} with {len(time_consumption)} samples.")
+
+
+def ode(model, protein_pos, protein_ele, protein_amino_acid, protein_is_backbone, z_pos, z_feat, num_timesteps,
+        batch_protein=None, batch_ligand=None, logger=print, bond_features=None, bond_edges=None, device='cpu',
+        reverse=False, return_v=False):
+    '''
+    If reverse=True, it is ode simulation for sampling. Otherwise, it is ode simulation for getting a latent code.
+    '''
+    model.eval()
+    with torch.no_grad():
+        protein_pos, protein_ele = protein_pos.to(device), protein_ele.to(device)
+        protein_amino_acid, protein_is_backbone = protein_amino_acid.to(device), protein_is_backbone.to(device)
+        z_pos, z_feat = z_pos.to(device), z_feat.to(device)
+        if bond_features is not None:
+            bond_features, bond_edges = bond_features.to(device), bond_edges.to(device)
+        dt = 1. / num_timesteps
+        num_atoms_per_ligand = z_pos.shape[0]
+        num_bond_edges = bond_features.shape[0]
+        if reverse:
+            timesteps, desc = reversed(range(num_timesteps)), 'getting a latent code'
+        else:
+            timesteps, desc = range(num_timesteps), 'sampling'
+        if return_v:
+            v_pos, v_ele, v_bond = [], [], []
+        for i in tqdm(timesteps, desc=desc, total=num_timesteps):
+            t_int = torch.as_tensor(i).reshape(-1, 1).to(device)
+            t = t_int.repeat(num_atoms_per_ligand, 1).squeeze()
+            t_bond = t_int.repeat(num_bond_edges, 1).squeeze()
+            pred_pos_v, pred_ele_v, pred_bond_v = model(protein_pos, protein_ele, protein_amino_acid,
+                      protein_is_backbone, z_pos, z_feat, t, batch_protein, batch_ligand,
+                      bond_features=bond_features, bond_indices=bond_edges,
+                      num_atoms_per_ligand=num_atoms_per_ligand, t_bond=t_bond)
+            if reverse:
+                z_pos -= pred_pos_v * dt
+                z_feat -= pred_ele_v * dt
+                if bond_features is not None:
+                    bond_features -= pred_bond_v * dt
+            else:
+                z_pos += pred_pos_v * dt
+                z_feat += pred_ele_v * dt
+                if bond_features is not None:
+                    bond_features += pred_bond_v * dt
+            if return_v:
+                v_pos.append(pred_pos_v)
+                v_ele.append(pred_ele_v)
+                v_bond.append(pred_bond_v)
+
+    return z_pos, z_feat, bond_features, (v_pos, v_ele, v_bond)

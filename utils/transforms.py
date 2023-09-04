@@ -1,9 +1,10 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
-
+from torch_geometric.data import Data
 from datasets.pl_data import ProteinLigandData
 from utils import data as utils_data
+from typing import Union
 
 AROMATIC_FEAT_MAP_IDX = utils_data.ATOM_FAMILIES_ID['Aromatic']
 
@@ -216,7 +217,7 @@ class FeaturizeLigandAtom(object):
         else:
             return len(MAP_ATOM_TYPE_FULL_TO_INDEX)
 
-    def __call__(self, data: ProteinLigandData):
+    def __call__(self, data: Union[ProteinLigandData, Data] ):
         element_list = data.ligand_element
         hybridization_list = data.ligand_hybridization
         aromatic_list = [v[AROMATIC_FEAT_MAP_IDX] for v in data.ligand_atom_feature]
