@@ -18,7 +18,7 @@ from utils.util_flow import get_logger, load_config, MeanSubtractionNorm, \
     convert_ele_emb2ele_types, measure_straightness
 # from torch_geometric.transforms import Compose
 # from torch_geometric.loader import DataLoader
-from utils.util_data import ProteinElement2IndexDict, MAP_ATOM_TYPE_AROMATIC_TO_INDEX_wo_h, torchify_dict, extract_data
+from utils.util_data import ProteinElement2IndexDict, MAP_ATOM_TYPE_AROMATIC_TO_INDEX_wo_h, torchify_dict, extract_data, perterb_X0
 from models.models import Model_CoM_free
 import numpy as np
 import utils.transforms as trans
@@ -26,7 +26,7 @@ from utils.data import PDBProtein, parse_sdf_file
 from torch_geometric.data import Data
 from utils import reconstruct
 from rdkit import Chem
-from utils.evaluate import evaluate_metrics, calculate_vina_score
+from utils.evaluate import evaluate_metrics, find_substructure, calculate_vina_score
 from utils.util_sampling import ode
 FOLLOW_BATCH = ('protein_element', 'ligand_element', 'ligand_bond_type',)
 
@@ -159,22 +159,29 @@ if __name__ == '__main__':
     # print(torch.allclose(X0_pos.cpu(), calculator_pref.result_dict['X0_pos_list'][-1]), f"norm: {torch.norm(X0_pos.cpu()-calculator_pref.result_dict['X0_pos_list'][-1]):.3f}")
     # print(torch.allclose(X0_ele_feat.cpu(), calculator_pref.result_dict['X0_ele_emb_list'][-1]), f"norm: {torch.norm(X0_ele_feat.cpu()-calculator_pref.result_dict['X0_ele_emb_list'][-1]):.3f}")
     # print(torch.allclose(X0_bond_feat.cpu(), calculator_pref.result_dict['X0_bond_emb_list'][-1]), f"norm: {torch.norm(X0_bond_feat.cpu()-calculator_pref.result_dict['X0_bond_emb_list'][-1]):.3f}")
-    print("straightness for v_pos:", measure_straightness(X0_pos.cpu(), z_pos, v_tuple[0], 'l1').item())
-    print("straightness for v_ele:", measure_straightness(X0_ele_feat.cpu(), z_feat, v_tuple[1], 'l1').item())
-    print("straightness for v_bond:", measure_straightness(X0_bond_feat.cpu(), ligand_bond_features, v_tuple[2], 'l1').item())
-    X1_pos, X1_ele_feat, X1_bond_feat = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
-                                            protein_amino_acid=protein_amino_acid,
-                                            protein_is_backbone=protein_is_backbone,
-                                            z_pos=X0_pos, z_feat=X0_ele_feat,
-                                            bond_features=X0_bond_feat, bond_edges=bond_edges,
-                                            device=device, reverse=False, num_timesteps=num_timesteps)
-    pred_ele_types = convert_ele_emb2ele_types(model, X1_ele_feat)
-    X1_pos_copy = X1_pos / pos_scale + protein_pos_mean.to(device)
-    mol = reconstruct.reconstruct_from_generated(X1_pos_copy.tolist(), pred_ele_types, aromatic=None,
-                                                 basic_mode=True, bond_type=None, bond_index=None)
-    smiles = Chem.MolToSmiles(mol)
-    print(f"Using latent code to generate a mol whose smiles is: {smiles}")
-    Chem.MolToMolFile(mol, os.path.join(log_dir, f'{current_time}.sdf'))
-    evaluate_metrics(mol, logger=logger.info)
+    logger.info(f"straightness for v_pos: {measure_straightness(X0_pos.cpu(), z_pos, v_tuple[0], 'l1').item()}")
+    logger.info(f"straightness for v_ele: {measure_straightness(X0_ele_feat.cpu(), z_feat, v_tuple[1], 'l1').item()}")
+    logger.info(f"straightness for v_bond: {measure_straightness(X0_bond_feat.cpu(), ligand_bond_features, v_tuple[2], 'l1').item()}")
+    for i in range(100):
+        X0_pos, X0_ele_feat, X0_bond_feat = perterb_X0(batch_size=1, X0_pos=X0_pos, X0_element_embedding=X0_ele_feat,
+                                                       X0_bond_embedding=X0_bond_feat, noise_level=0.1)
+        X1_pos, X1_ele_feat, X1_bond_feat = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
+                                                protein_amino_acid=protein_amino_acid,
+                                                protein_is_backbone=protein_is_backbone,
+                                                z_pos=X0_pos, z_feat=X0_ele_feat,
+                                                bond_features=X0_bond_feat, bond_edges=bond_edges,
+                                                device=device, reverse=False, num_timesteps=num_timesteps)
+        pred_ele_types = convert_ele_emb2ele_types(model, X1_ele_feat)
+        X1_pos_copy = X1_pos / pos_scale + protein_pos_mean.to(device)
+        mol = reconstruct.reconstruct_from_generated(X1_pos_copy.tolist(), pred_ele_types, aromatic=None,
+                                                     basic_mode=True, bond_type=None, bond_index=None)
+        smiles = Chem.MolToSmiles(mol)
+        logger.info(f"Using latent code to generate a mol whose smiles is: {smiles}")
+        if find_substructure(smiles, 'c1ccccc1Nc2ncccn2'):
+            logger.info(f"c1ccccc1Nc2ncccn2 found!")
+        if find_substructure(smiles, 'c12ccccc1cncn2'):
+            logger.info(f"c12ccccc1cncn2 found!")
+        Chem.MolToMolFile(mol, os.path.join(log_dir, f'{current_time}_{i}.sdf'))
+        evaluate_metrics(mol, logger=logger.info)
     # calculate_vina_score(mol, pocket_idx, os.path.join(log_dir, 'test.sdf'))
     sys.exit()
