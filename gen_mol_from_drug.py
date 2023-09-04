@@ -162,6 +162,10 @@ if __name__ == '__main__':
     logger.info(f"straightness for v_pos: {measure_straightness(X0_pos.cpu(), z_pos, v_tuple[0], 'l1').item()}")
     logger.info(f"straightness for v_ele: {measure_straightness(X0_ele_feat.cpu(), z_feat, v_tuple[1], 'l1').item()}")
     logger.info(f"straightness for v_bond: {measure_straightness(X0_bond_feat.cpu(), ligand_bond_features, v_tuple[2], 'l1').item()}")
+    sdf_path = os.path.join(log_dir, 'SDF')
+    os.makedirs(sdf_path, exist_ok=True)
+    pt_path = os.path.join(log_dir, 'pt')
+    os.makedirs(pt_path, exist_ok=True)
     for i in range(100):
         X0_pos, X0_ele_feat, X0_bond_feat = perterb_X0(batch_size=1, X0_pos=X0_pos, X0_element_embedding=X0_ele_feat,
                                                        X0_bond_embedding=X0_bond_feat, noise_level=0.1)
@@ -177,11 +181,22 @@ if __name__ == '__main__':
                                                      basic_mode=True, bond_type=None, bond_index=None)
         smiles = Chem.MolToSmiles(mol)
         logger.info(f"Using latent code to generate a mol whose smiles is: {smiles}")
-        if find_substructure(smiles, 'c1ccccc1Nc2ncccn2'):
-            logger.info(f"c1ccccc1Nc2ncccn2 found!")
-        if find_substructure(smiles, 'c12ccccc1cncn2'):
-            logger.info(f"c12ccccc1cncn2 found!")
-        Chem.MolToMolFile(mol, os.path.join(log_dir, f'{current_time}_{i}.sdf'))
+        if '.' not in smiles:
+            if find_substructure(smiles, 'c1ccccc1Nc2ncccn2'):
+                logger.info(f"c1ccccc1Nc2ncccn2 found!")
+            if find_substructure(smiles, 'c12ccccc1cncn2'):
+                logger.info(f"c12ccccc1cncn2 found!")
+        else:
+            logger.info(f"This mol is not connected.")
+            continue
+        mol_path = os.path.join(sdf_path, f'{current_time}_{i}.sdf')
+        Chem.MolToMolFile(mol, mol_path)
         evaluate_metrics(mol, logger=logger.info)
+        torch.save({'mol_path': mol_path,
+                    'smiles': smiles,
+                    'mol': mol,
+                    'X0_pos': X0_pos,
+                    'X0_ele': X0_ele_feat,
+                    'X0_bond': X0_bond_feat}, os.path.join(pt_path, f'{current_time}_{i}.pt'))
     # calculate_vina_score(mol, pocket_idx, os.path.join(log_dir, 'test.sdf'))
     sys.exit()
