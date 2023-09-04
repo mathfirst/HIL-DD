@@ -258,20 +258,25 @@ if __name__ == '__main__':
                     t0 = time.time()
                     time.sleep(0.1)
                     annotations = json.load(f)
-                    like_ls = annotations['like_ids']
-                    dislike_ls = annotations['dislike_ids']
+                    like_ls = annotations['liked_ids']
+                    dislike_ls = annotations['disliked_ids']
                 dst = os.path.join(annotation_dir, f'annotations_{num_inj}.json')
                 shutil.move(annotation_path, dst)
                 logger.info(f"Interaction {len(os.listdir(annotation_dir))}, positive annotations: {len(like_ls)}, negative annotations: {len(dislike_ls)}")
                 num_total_positive_annotations += len(like_ls)
                 num_total_negative_annotations += len(dislike_ls)
-                prepare_pref_data.storeData(proposal_base_dict, like_ls, dislike_ls)
+                shutil.move(proposals_path,
+                os.path.join(proposals_dir, f"proposals_{len(os.listdir(proposals_dir))}.json"))
+                if os.path.isfile(annotation_path):
+                    os.remove(annotation_path)
+                if len(like_ls) + len(dislike_ls) == 0:
+                    logger.info("There are no annotations this time.")
+                else:
+                    prepare_pref_data.storeData(proposal_base_dict, like_ls, dislike_ls)
                 for k, v in proposal_base_dict.items():
                     if len(proposal_base_dict[k]) >= num_proposals_ui:
                         proposal_base_dict[k] = proposal_base_dict[k][num_proposals_ui:]  # delete mols that have been used
-                shutil.move(proposals_path, os.path.join(proposals_dir, f"proposals_{len(os.listdir(proposals_dir))}.json"))
-                if os.path.isfile(annotation_path):
-                    os.remove(annotation_path)
+
             if num_total_positive_annotations >= 2 and num_total_negative_annotations >= 2:
                 logger.info(f"Number of total annotations: {num_total_positive_annotations + num_total_negative_annotations}")
                 logger.info(f"No. of positive annotations: {num_total_positive_annotations}")
