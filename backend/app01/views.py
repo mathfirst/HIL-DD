@@ -89,6 +89,12 @@ def sendMoleculeList(request, start=False):
         print('getting annotations...')
         like_ids = request.POST.get('liked_ids')
         dislike_ids = request.POST.get('disliked_ids')
+        received_json_data = json.loads(request.body)
+        print(received_json_data)
+        timestamp = received_json_data.timestamp
+        pdb_id = received_json_data.pdb_id
+        like_ids = received_json_data.like_ids
+        dislike_ids = received_json_data.dislike_ids
         annotation_dict = {'liked_ids': like_ids, 'disliked_ids': dislike_ids}
         annotation_dir = os.path.join('./app01/static/', timestamp, 'annotations')
         os.makedirs(annotation_dir, exist_ok=True)
