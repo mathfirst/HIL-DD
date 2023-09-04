@@ -187,9 +187,12 @@ if __name__ == '__main__':
                                                 device=device, reverse=False, num_timesteps=num_timesteps)
         pred_ele_types = convert_ele_emb2ele_types(model, X1_ele_feat)
         X1_pos_copy = X1_pos / pos_scale + protein_pos_mean.to(device)
-        mol = reconstruct.reconstruct_from_generated(X1_pos_copy.tolist(), pred_ele_types, aromatic=None,
-                                                     basic_mode=True, bond_type=None, bond_index=None)
-        smiles = Chem.MolToSmiles(mol)
+        try:
+            mol = reconstruct.reconstruct_from_generated(X1_pos_copy.tolist(), pred_ele_types, aromatic=None,
+                                                         basic_mode=True, bond_type=None, bond_index=None)
+            smiles = Chem.MolToSmiles(mol)
+        except Exception as err:
+            logger.info(f"error when reconstructing: {err}")
         logger.info(f"smiles: {smiles}, smiles_gt: {smiles_drug}")
         logger.info(f"smilarity: {similarity(mol, mol_drug)}")
         if '.' not in smiles:
@@ -213,6 +216,6 @@ if __name__ == '__main__':
                         'X0_ele': X0_ele_feat,
                         'X0_bond': X0_bond_feat}, os.path.join(pt_path, f'{current_time}_{i}.pt'))
         except Exception as err:
-            logger.info(f"{err}")
+            logger.info(f"when evaluating: {err}")
     # calculate_vina_score(mol, pocket_idx, os.path.join(log_dir, 'test.sdf'))
     sys.exit()
