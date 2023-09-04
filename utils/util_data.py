@@ -218,7 +218,7 @@ class PreparePrefData4UI:
 def proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations, num_total_negative_annotations, num_inj, num_proposals_ui, logger=print):
     if not os.path.isfile(proposals_path) and len(proposal_base_dict['mol_list']) >= num_proposals_ui:
         logger(f"{num_inj} making proposals")
-        if num_total_positive_annotations >=2 and num_total_negative_annotations >= 2 and num_inj > 3:
+        if num_total_positive_annotations >=2 and num_total_negative_annotations >= 2 and num_inj > 2:
             check_prompt = True  # evaluation condition
         else:
             check_prompt = False
