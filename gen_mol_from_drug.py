@@ -49,7 +49,7 @@ if __name__ == '__main__':
     ligand_dict = parse_sdf_file(args.sdf)
     for k, v in torchify_dict(ligand_dict).items():
         data['ligand_' + k] = v
-    mol_drug = Chem.MolToMolFile(args.sdf)
+    mol_drug = Chem.MolFromMolFile(args.sdf)
     smiles_drug = Chem.MolToSmiles(mol_drug)
     # logging
     current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
