@@ -24,7 +24,8 @@ urlpatterns = [
     path("api/confirmpdb/", views.getTimePDB),
     path("api/preference/", views.sendMoleculeList),
     path("api/sendAnnotations/", views.getAnnotations),
-    path("api/feedback/", views.evaluation),
+    path("api/getMoleculeList/ai/", views.evaluation),
+    path("api/feedback/", views.feedback),
     path("test/", views.test),
     path("login/", views.login),
 ]

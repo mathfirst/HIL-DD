@@ -168,8 +168,8 @@ def sendMoleculeList(request, start=False):
 
 def evaluation(request):
     timestamp = str(request.GET.get('timestamp'))
-    pdb = str(request.GET.get('pdb'))
-    logger.info(f"evaluation: {timestamp}, {pdb}")
+    # pdb = str(request.GET.get('pdb'))
+    logger.info(f"evaluation: {timestamp}")
     eval_dir = os.path.join('./app01/static/', timestamp, 'evaluation')
     evaluation_json = os.path.join(eval_dir, 'evaluation.json')
     while True:
@@ -182,7 +182,15 @@ def evaluation(request):
             break
 
     return JsonResponse(evaluation_samples)
-    # return HttpResponse('success')
+
+
+def feedback(request):
+    timestamp = request.GET.get('timestamp')
+    logger.info(f"Entering feedback, timestamp is {timestamp}.")
+    received_json_data = json.loads(request.body)
+    score = received_json_data['score']
+    logger.info(f"The score is {score}.")
+    return HttpResponse('success')
 
 
 def login(request):
