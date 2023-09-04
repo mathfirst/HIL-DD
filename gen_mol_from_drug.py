@@ -28,7 +28,7 @@ from utils import reconstruct
 from rdkit import Chem
 from utils.evaluate import evaluate_metrics, find_substructure, similarity, calculate_vina_score
 from utils.util_sampling import ode
-
+from utils.analyze import check_stability
 FOLLOW_BATCH = ('protein_element', 'ligand_element', 'ligand_bond_type',)
 
 # seed_torch()
@@ -186,6 +186,8 @@ if __name__ == '__main__':
         logger.info(f"smiles: {smiles}, smiles_gt: {smiles_drug}")
         logger.info(f"smilarity: {similarity(mol, mol_drug)}")
         if '.' not in smiles:
+            r_stable = check_stability(X1_pos, pred_ele_types)
+            logger.info(f"{r_stable}")
             if find_substructure(smiles, 'c1ccccc1Nc2ncccn2'):
                 logger.info(f"c1ccccc1Nc2ncccn2 found!")
             if find_substructure(smiles, 'c12ccccc1cncn2'):
@@ -194,13 +196,16 @@ if __name__ == '__main__':
             logger.info(f"This mol is not connected.")
             continue
         mol_path = os.path.join(sdf_path, f'{current_time}_{i}.sdf')
-        Chem.MolToMolFile(mol, mol_path)
-        evaluate_metrics(mol, logger=logger.info)
-        torch.save({'mol_path': mol_path,
-                    'smiles': smiles,
-                    'mol': mol,
-                    'X0_pos': X0_pos,
-                    'X0_ele': X0_ele_feat,
-                    'X0_bond': X0_bond_feat}, os.path.join(pt_path, f'{current_time}_{i}.pt'))
+        try:
+            Chem.MolToMolFile(mol, mol_path)
+            evaluate_metrics(mol, logger=logger.info)
+            torch.save({'mol_path': mol_path,
+                        'smiles': smiles,
+                        'mol': mol,
+                        'X0_pos': X0_pos,
+                        'X0_ele': X0_ele_feat,
+                        'X0_bond': X0_bond_feat}, os.path.join(pt_path, f'{current_time}_{i}.pt'))
+        except Exception as err:
+            logger.info(f"{err}")
     # calculate_vina_score(mol, pocket_idx, os.path.join(log_dir, 'test.sdf'))
     sys.exit()
