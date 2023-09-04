@@ -52,10 +52,9 @@ if __name__ == '__main__':
     current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     log_dir = os.path.join(args.logdir, current_time)
     os.makedirs(log_dir, exist_ok=True)
-    filename = "log-" + ".txt"
-    log_filename = os.path.join(log_dir, filename)
+    log_filename = os.path.join(log_dir, "log.txt")
     logger = get_logger('gen-mol-from-drug', log_filename)
-    shutil.copy(args.config, os.path.join(log_dir, 'config-' + '.yml'))
+    shutil.copy(args.config, os.path.join(log_dir, 'config' + '.yml'))
     current_file = __file__  # get the name of the currently executing python file
     shutil.copy(current_file, os.path.join(log_dir, os.path.basename(current_file).split('.')[0] + '.py'))
 
@@ -163,12 +162,12 @@ if __name__ == '__main__':
     print("straightness for v_pos:", measure_straightness(X0_pos.cpu(), z_pos, v_tuple[0], 'l1').item())
     print("straightness for v_ele:", measure_straightness(X0_ele_feat.cpu(), z_feat, v_tuple[1], 'l1').item())
     print("straightness for v_bond:", measure_straightness(X0_bond_feat.cpu(), ligand_bond_features, v_tuple[2], 'l1').item())
-    X1_pos, X1_ele_feat, X1_bond_feat, _ = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
-                                               protein_amino_acid=protein_amino_acid,
-                                               protein_is_backbone=protein_is_backbone,
-                                               z_pos=X0_pos, z_feat=X0_ele_feat,
-                                               bond_features=X0_bond_feat, bond_edges=bond_edges,
-                                               device=device, reverse=False, num_timesteps=num_timesteps)
+    X1_pos, X1_ele_feat, X1_bond_feat = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
+                                            protein_amino_acid=protein_amino_acid,
+                                            protein_is_backbone=protein_is_backbone,
+                                            z_pos=X0_pos, z_feat=X0_ele_feat,
+                                            bond_features=X0_bond_feat, bond_edges=bond_edges,
+                                            device=device, reverse=False, num_timesteps=num_timesteps)
     pred_ele_types = convert_ele_emb2ele_types(model, X1_ele_feat)
     X1_pos_copy = X1_pos / pos_scale + protein_pos_mean.to(device)
     mol = reconstruct.reconstruct_from_generated(X1_pos_copy.tolist(), pred_ele_types, aromatic=None,
