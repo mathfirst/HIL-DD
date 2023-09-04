@@ -229,14 +229,17 @@ if __name__ == '__main__':
             logger(f"loading {pt}")
             time.sleep(0.1)
             pt_path = os.path.join(proposals_dir, pt)
-            proposals = torch.load(pt_path, map_location='cpu')
-            for k, v in proposals.items():
-                if isinstance(v, list):
-                    if k in proposal_base_dict:
-                        proposal_base_dict[k] += v
-                    else:
-                        proposal_base_dict[k] = v
-            os.remove(pt_path)
+            try:
+                proposals = torch.load(pt_path, map_location='cpu')
+                for k, v in proposals.items():
+                    if isinstance(v, list):
+                        if k in proposal_base_dict:
+                            proposal_base_dict[k] += v
+                        else:
+                            proposal_base_dict[k] = v
+                os.remove(pt_path)
+            except Exception as err:
+                logger(f"when loading {pt}, {err}")
     t0 = time.time()
     for num_inj in range(10000):
         if time.time() - t0 > 10*60:
@@ -268,8 +271,6 @@ if __name__ == '__main__':
                 num_total_negative_annotations += len(dislike_ls)
                 if os.path.isfile(annotation_path):
                     os.remove(annotation_path)
-                shutil.move(proposals_path,
-                            os.path.join(proposals_dir, f"proposals_{len(os.listdir(proposals_dir))}.json"))
                 time.sleep(0.1)
                 if len(like_ls) + len(dislike_ls) == 0:
                     logger.info("There are no annotations this time.")
