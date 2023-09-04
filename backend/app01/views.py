@@ -47,7 +47,7 @@ def test(request):
 def getPDBList(request):
     import pandas as pd
     df = pd.read_csv("../configs/PDB_ID_CrossDocked_testset.csv", encoding="utf-8")
-    full_pdb_dir = 'app01/static/full_pdb/'
+    full_pdb_dir = './app01/static/full_pdb/'
     if not os.path.isdir(full_pdb_dir):
         logger.info(f'making dir {full_pdb_dir}')
         os.makedirs(full_pdb_dir)
@@ -77,7 +77,7 @@ def getAnnotations(request):
         return HttpResponse('not received')
 
 
-def getTimePDB(request):
+def getTimePDB(request):  # api/confirmpdb/
     timestamp = str(request.POST.get('timestamp'))
     pdb = str(request.POST.get('pdb_id'))
     logger.info(f"In getTimePDB, {timestamp}, {pdb}")
@@ -133,11 +133,10 @@ def sendMoleculeList(request, start=False):
     while True:
         if os.path.isfile(proposal_json):
             logger.info(f"loading {proposal_json}")
-            # os.system('django-admin collectstatic')
-            # print('django-admin collectstatic is done.')
             time.sleep(0.1)
             with open(proposal_json, 'r') as f:
                 proposals = json.load(f)
+            shutil.move(proposal_json, os.path.join(proposal_dir, f"proposals_{len(os.listdir(proposal_dir))}.json"))
             break
     # annotation_dir = os.path.join('./app01/static/', timestamp, 'annotations')
     # os.makedirs(annotation_dir, exist_ok=True)

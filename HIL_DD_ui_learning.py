@@ -265,8 +265,6 @@ if __name__ == '__main__':
                 logger.info(f"Interaction {len(os.listdir(annotation_dir))}, positive annotations: {len(like_ls)}, negative annotations: {len(dislike_ls)}")
                 num_total_positive_annotations += len(like_ls)
                 num_total_negative_annotations += len(dislike_ls)
-                shutil.move(proposals_path,
-                os.path.join(proposals_dir, f"proposals_{len(os.listdir(proposals_dir))}.json"))
                 if os.path.isfile(annotation_path):
                     os.remove(annotation_path)
                 if len(like_ls) + len(dislike_ls) == 0:
@@ -282,7 +280,7 @@ if __name__ == '__main__':
                 logger.info(f"No. of positive annotations: {num_total_positive_annotations}")
                 logger.info(f"No. of negative annotations:  {num_total_negative_annotations}")
                 break  # In this case, there are some proposals stored already.
-            elif not os.path.isfile(annotation_path) and not os.path.isfile(proposals_path):  # if there were few annotations in the last annotation file
+            elif not os.path.isfile(annotation_path) and not os.path.isfile(proposals_path):  # if there were few annotations in the previous annotation files
                 get_proposals(pt_dir, proposal_base_dict, logger=logger.info)
                 proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
                               num_total_negative_annotations, num_inj, num_proposals_ui)
@@ -293,7 +291,7 @@ if __name__ == '__main__':
                 logger.info("The learning will start only if at least 2 positive samples and 2 negative samples are available.")
                 time.sleep(1)
                 logger.info("waiting for annotations...")
-                continue
+                # continue
         model_pref.train()
         num_actual_updates = 0
         show_recent_loss_cls = OnlineAveraging(averaging_range=len_history)

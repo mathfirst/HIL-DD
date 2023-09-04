@@ -179,8 +179,8 @@ if __name__ == '__main__':
     os.makedirs(pt_path, exist_ok=True)
     for i in range(100):
         calculator = sampling_val(model, data, 0, pos_scale, result_dir, logger, device, ProteinElement2IndexDict,
-                                  num_timesteps=num_timesteps, mode='add_aromatic_wo_h', num_samples=10,
-                                  cal_vina_score=False, num_spacing_steps=False, bond_emb=True,
+                                  num_timesteps=num_timesteps, mode='add_aromatic_wo_h', num_samples=100,
+                                  cal_vina_score=False, num_spacing_steps=100, bond_emb=True,
                                   cal_straightness=False, t_sampling_strategy='uniform',
                                   drop_unconnected_mol=True, cls_fn=None, s=0, batch_size=100,
                                   guidance_type='BCE', protein_pdbqt_file_path='', X0_pos=X0_pos,
