@@ -241,6 +241,7 @@ if __name__ == '__main__':
             except Exception as err:
                 logger(f"when loading {pt}, {err}")
     t0 = time.time()
+    load_flag = True
     for num_inj in range(10000):
         if time.time() - t0 > 10*60:
             logger.info(f"You have made no operations during the past 10 minutes. Exiting...")
@@ -252,8 +253,9 @@ if __name__ == '__main__':
             else:
                 logger.info('preparing proposals...')
                 break
-        load_flag = not proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
-                                      num_total_negative_annotations, num_inj, num_proposals_ui)
+        if load_flag:
+            load_flag = not proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
+                                          num_total_negative_annotations, num_inj, num_proposals_ui)
         t0 = time.time()
         while True:
             if os.path.isfile(annotation_path):
