@@ -17,12 +17,12 @@ FOLLOW_BATCH = ('protein_element', 'ligand_element', 'ligand_bond_type',)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default="sampling.yml")
+    parser.add_argument('--config', type=str, default="configs/sampling.yml")
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--logdir', type=str, default='./logs_sampling')
     parser.add_argument('--desc', type=str, default='')
     parser.add_argument('--suffix', type=str, default='')
-    parser.add_argument('--pdb_path', type=str, default='')
+    parser.add_argument('--pdb', type=str, default='')
     parser.add_argument('--receptor_path', type=str, default='')
     # specify the number of atoms in a ligand or a specific number, e.g. 18
     parser.add_argument('--num_atoms', type=str, default='18')  # 'reference' means the same number of atoms as the reference ligand in the test set
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     log_filename = os.path.join(log_dir, "log.txt")
     logger = get_logger('train', log_filename)
     logger.info(f'pdb_path: {args.pdb_path}')
-    shutil.copy(args.config, os.path.join(log_dir, 'config-' + '.yml'))
+    shutil.copy(args.config, os.path.join(log_dir, 'config' + '.yml'))
     current_file = __file__  # get the name of the currently executing python file
     shutil.copy(current_file, os.path.join(log_dir, os.path.basename(current_file).split('.')[0] + '.py'))
     device = args.device if torch.cuda.is_available() else "cpu"
@@ -77,13 +77,6 @@ if __name__ == '__main__':
                 f"opt_time_emb: {opt_time_emb}")
     # Transforms
     mode = config.data.transform.ligand_atom_mode
-    ligand_featurizer = trans.FeaturizeLigandAtom(mode)
-    transform_list = [ligand_featurizer, ]
-    if config.data.transform.random_rot:
-        logger.info("apply random rotation")
-        transform_list.append(trans.RandomRotation())
-    transform = Compose(transform_list)
-    subtract_mean = MeanSubtractionNorm()   # This is used to center positions.
     # loading data
     sample_result_dir = os.path.join(log_dir, 'sample-results')
     os.makedirs(sample_result_dir, exist_ok=True)
@@ -109,13 +102,14 @@ if __name__ == '__main__':
             classifier = None
     vina, qed, sa, lipinski, logp, diversity, time, high_affinity = [], [], [], [], [], [], [], []
     calculator = sampling_val(model_ema, data, 0, pos_scale, sample_result_dir, logger, device,
-                 ProteinElement2IndexDict, num_timesteps=num_timesteps, mode=mode,
-                 num_samples=config.sampling.num_samples, cal_vina_score=cal_vina_score,
-                 t_sampling_strategy='uniform', cal_straightness=False,
-                 num_spacing_steps=config.sampling.num_spacing_steps,
-                 drop_unconnected_mol=config.sampling.drop_unconnected_mol, bond_emb=config.sampling.bond_emb,
-                 sampling_method=config.sampling.sampling_method, batch_size=config.sampling.batch_size,
-                 cls_fn=classifier, s=config.sampling.guidance_scale, num_atoms=args.num_atoms,
+                              ProteinElement2IndexDict, num_timesteps=num_timesteps, mode=mode,
+                              num_samples=config.sampling.num_samples, cal_vina_score=cal_vina_score,
+                              t_sampling_strategy='uniform', cal_straightness=False,
+                              num_spacing_steps=config.sampling.num_spacing_steps,
+                              drop_unconnected_mol=config.sampling.drop_unconnected_mol,
+                              bond_emb=config.sampling.bond_emb,
+                              sampling_method=config.sampling.sampling_method, batch_size=config.sampling.batch_size,
+                              cls_fn=classifier, s=config.sampling.guidance_scale, num_atoms=args.num_atoms,
                               protein_pdbqt_dir='configs/test_protein', protein_pdbqt_file_path=args.receptor_path)
     vina.append(calculator.stat_dict['vina_score_mean'])
     qed.append((calculator.stat_dict['qed_mean']))

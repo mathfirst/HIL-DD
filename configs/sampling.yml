@@ -63,7 +63,7 @@ sampling:
   pocket_id:
   bond_emb: True
   num_samples: 100
-  cal_vina_score: True
+  cal_vina_score: False
   drop_unconnected_mol: True
   sampling_method: Euler
   batch_size: 100
