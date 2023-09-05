@@ -284,9 +284,8 @@ if __name__ == '__main__':
                 load_flag = True
             if load_flag:
                 get_proposals(pt_dir, proposal_base_dict, logger=logger.info)
-                proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
-                              num_total_negative_annotations, num_inj, num_proposals_ui)
-                load_flag = False
+                load_flag = proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
+                                          num_total_negative_annotations, num_inj, num_proposals_ui)
 
             if num_total_positive_annotations >= 2 and num_total_negative_annotations >= 2:
                 logger.info(f"Number of total annotations: {num_total_positive_annotations + num_total_negative_annotations}")
