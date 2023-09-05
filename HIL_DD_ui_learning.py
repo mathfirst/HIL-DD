@@ -288,10 +288,6 @@ if __name__ == '__main__':
                 logger.info(f"No. of positive annotations: {num_total_positive_annotations}")
                 logger.info(f"No. of negative annotations:  {num_total_negative_annotations}")
                 break  # In this case, there are some proposals stored already.
-            # elif not os.path.isfile(annotation_path) and not os.path.isfile(proposals_path):  # if there were few annotations in the previous annotation files
-            #     get_proposals(pt_dir, proposal_base_dict, logger=logger.info)
-            #     proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
-            #                   num_total_negative_annotations, num_inj, num_proposals_ui)
             else:
                 if time.time() - t0 > 20*60:
                     logger.info(f"AI has waited over half an hour. Exiting...")

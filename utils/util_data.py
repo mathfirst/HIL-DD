@@ -243,7 +243,7 @@ def proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotat
             json.dump(dict_proposals, outfile, cls=NpEncoder, indent=2)
 
 
-def evaluation2json(proposal_base_dict, evaluation_path, num_samples, num_likes, num_dislikes):
+def evaluation2json(proposal_base_dict, evaluation_path, num_samples):
     dict_proposals = {'next_molecules': [], }
     for i in range(num_samples):
         molecule = {'id': i + 1,
