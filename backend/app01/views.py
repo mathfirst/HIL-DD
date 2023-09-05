@@ -88,13 +88,13 @@ def getTimePDB(request):  # api/confirmpdb/
         os.chdir('../')
         output = os.getcwd()
         logger.info(f'after changing dir {output}')
-    Popen(['python3', 'HIL_DD_ui_proposals.py', timestamp, pdb, '--device cuda:1'], shell=False,
+    Popen(['python3', 'HIL_DD_ui_proposals.py', timestamp, pdb, '--device', 'cuda:1'], shell=False,
           close_fds=True)  # , creationflags=DETACHED_PROCESS)
     time.sleep(30)
-    Popen(['python3', 'HIL_DD_ui_learning.py', timestamp, pdb, '--device cuda:2'], shell=False,
+    Popen(['python3', 'HIL_DD_ui_learning.py', timestamp, pdb, '--device', 'cuda:2'], shell=False,
           close_fds=True)  # , creationflags=DETACHED_PROCESS)
     time.sleep(20)
-    Popen(['python3', 'HIL_DD_ui_evaluation.py', timestamp, pdb, '--device cuda:3'], shell=False,
+    Popen(['python3', 'HIL_DD_ui_evaluation.py', timestamp, pdb, '--device', 'cuda:3'], shell=False,
           close_fds=True)  # , creationflags=DETACHED_PROCESS)
     output = os.getcwd()
     if output.strip().endswith('HIL-DD'):
@@ -136,9 +136,9 @@ def sendMoleculeList(request, start=False):
             time.sleep(0.1)
             with open(proposal_json, 'r') as f:
                 proposals = json.load(f)
-            logger.info(f"proposals: {proposals}")
             shutil.move(proposal_json,
                         os.path.join(proposal_dir, f"proposals_{len(os.listdir(proposal_dir))}.json"))
+            logger.info(f"proposals: {proposals}")
             time.sleep(0.1)
             break
     # annotation_dir = os.path.join('./app01/static/', timestamp, 'annotations')

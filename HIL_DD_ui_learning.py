@@ -246,16 +246,14 @@ if __name__ == '__main__':
         if time.time() - t0 > 10*60:
             logger.info(f"You have made no operations during the past 10 minutes. Exiting...")
             sys.exit()
-        while True:
-            get_proposals(pt_dir, proposal_base_dict, logger=logger.info)
-            if len(proposal_base_dict['mol_list']) < num_proposals_ui:
-                continue
-            else:
-                logger.info('preparing proposals...')
-                break
-        if load_flag:
-            load_flag = not proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
-                                          num_total_negative_annotations, num_inj, num_proposals_ui)
+        # while load_flag:
+        #     get_proposals(pt_dir, proposal_base_dict, logger=logger.info)
+        #     if len(proposal_base_dict['mol_list']) < num_proposals_ui:
+        #         continue
+        #     else:
+        #         logger.info('preparing proposals...')
+        #     load_flag = proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
+        #                               num_total_negative_annotations, num_inj, num_proposals_ui)
         t0 = time.time()
         while True:
             if os.path.isfile(annotation_path):
@@ -265,7 +263,6 @@ if __name__ == '__main__':
                     annotations = json.load(f)
                     like_ls = annotations['liked_ids']
                     dislike_ls = annotations['disliked_ids']
-                    # start = annotations['start']
                 dst = os.path.join(annotation_dir, f'annotations_{num_inj}.json')
                 shutil.move(annotation_path, dst)
                 logger.info(f"Interaction {len(os.listdir(annotation_dir))}, positive annotations: {len(like_ls)}, "
@@ -273,6 +270,7 @@ if __name__ == '__main__':
                 num_total_positive_annotations += len(like_ls)
                 num_total_negative_annotations += len(dislike_ls)
                 if os.path.isfile(annotation_path):
+                    logger.info(f"removing {annotation_path}")
                     os.remove(annotation_path)
                 time.sleep(0.1)
                 if len(like_ls) + len(dislike_ls) == 0:
