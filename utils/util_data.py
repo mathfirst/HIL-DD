@@ -215,10 +215,11 @@ class PreparePrefData4UI:
         return Xt_pos_pair, Xt_ele_emb_pair, Xt_bond_emb_pair, t_int, t_bond
 
 
-def proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations, num_total_negative_annotations, num_inj, num_proposals_ui, logger=print):
+def proposal2json(proposals_path, evaluation_path, proposal_base_dict, num_total_positive_annotations,
+                  num_total_negative_annotations, num_inj, num_proposals_ui, logger=print):
     if not os.path.isfile(proposals_path) and len(proposal_base_dict['mol_list']) >= num_proposals_ui:
         logger(f"{num_inj} making proposals")
-        if num_total_positive_annotations >= 2 and num_total_negative_annotations >= 2 and num_inj > 2:
+        if num_total_positive_annotations >= 2 and num_total_negative_annotations >= 2 and os.path.isfile(evaluation_path):
             check_prompt = True  # evaluation condition
         else:
             check_prompt = False

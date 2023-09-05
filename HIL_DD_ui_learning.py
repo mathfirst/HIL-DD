@@ -221,6 +221,7 @@ if __name__ == '__main__':
     proposals_path = os.path.join(proposals_dir, 'proposals.json')
     pt_dir = os.path.join(log_dir, 'final_pt_files')
     os.makedirs(pt_dir, exist_ok=True)
+    evaluation_path = os.path.join(f'backend/app01/static/{args.params[0]}/', 'evaluation', 'evaluation.json')
 
 
     def get_proposals(proposals_dir, proposal_base_dict, logger=print):
@@ -246,14 +247,6 @@ if __name__ == '__main__':
         if time.time() - t0 > 10*60:
             logger.info(f"You have made no operations during the past 10 minutes. Exiting...")
             sys.exit()
-        # while load_flag:
-        #     get_proposals(pt_dir, proposal_base_dict, logger=logger.info)
-        #     if len(proposal_base_dict['mol_list']) < num_proposals_ui:
-        #         continue
-        #     else:
-        #         logger.info('preparing proposals...')
-        #     load_flag = proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
-        #                               num_total_negative_annotations, num_inj, num_proposals_ui)
         t0 = time.time()
         while True:
             if os.path.isfile(annotation_path):
@@ -269,9 +262,6 @@ if __name__ == '__main__':
                             f"negative annotations: {len(dislike_ls)}")
                 num_total_positive_annotations += len(like_ls)
                 num_total_negative_annotations += len(dislike_ls)
-                if os.path.isfile(annotation_path):
-                    logger.info(f"removing {annotation_path}")
-                    os.remove(annotation_path)
                 time.sleep(0.1)
                 if len(like_ls) + len(dislike_ls) == 0:
                     logger.info("There are no annotations this time.")
@@ -283,8 +273,10 @@ if __name__ == '__main__':
                 load_flag = True
             if load_flag:
                 get_proposals(pt_dir, proposal_base_dict, logger=logger.info)
-                load_flag = not proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
+                load_flag = not proposal2json(proposals_path, evaluation_path, proposal_base_dict, num_total_positive_annotations,
                                               num_total_negative_annotations, num_inj, num_proposals_ui)
+                if load_flag is False:
+                    logger.info(f"num_inj {num_inj}, proposals loaded {load_flag}")
 
             if num_total_positive_annotations >= 2 and num_total_negative_annotations >= 2:
                 logger.info(f"Number of total annotations: {num_total_positive_annotations + num_total_negative_annotations}")
