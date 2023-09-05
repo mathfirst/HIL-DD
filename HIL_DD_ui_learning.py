@@ -254,6 +254,7 @@ if __name__ == '__main__':
                 break
         proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
                       num_total_negative_annotations, num_inj, num_proposals_ui)
+        load_flag = False
         t0 = time.time()
         while True:
             if os.path.isfile(annotation_path):
@@ -263,6 +264,7 @@ if __name__ == '__main__':
                     annotations = json.load(f)
                     like_ls = annotations['liked_ids']
                     dislike_ls = annotations['disliked_ids']
+                    # start = annotations['start']
                 dst = os.path.join(annotation_dir, f'annotations_{num_inj}.json')
                 shutil.move(annotation_path, dst)
                 logger.info(f"Interaction {len(os.listdir(annotation_dir))}, positive annotations: {len(like_ls)}, "
@@ -279,9 +281,12 @@ if __name__ == '__main__':
                 for k, v in proposal_base_dict.items():
                     if len(proposal_base_dict[k]) >= num_proposals_ui:
                         proposal_base_dict[k] = proposal_base_dict[k][num_proposals_ui:]  # delete mols that have been used
+                load_flag = True
+            if load_flag:
                 get_proposals(pt_dir, proposal_base_dict, logger=logger.info)
-                proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
+                load_flag = proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotations,
                               num_total_negative_annotations, num_inj, num_proposals_ui)
+                load_flag = False
 
             if num_total_positive_annotations >= 2 and num_total_negative_annotations >= 2:
                 logger.info(f"Number of total annotations: {num_total_positive_annotations + num_total_negative_annotations}")

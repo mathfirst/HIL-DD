@@ -241,6 +241,9 @@ def proposal2json(proposals_path, proposal_base_dict, num_total_positive_annotat
             dict_proposals['next_molecules'].append(molecule)
         with open(proposals_path, "w") as outfile:
             json.dump(dict_proposals, outfile, cls=NpEncoder, indent=2)
+        return True  # made proposals
+    else:
+        return False  # did not make proposals
 
 
 def evaluation2json(proposal_base_dict, evaluation_path, num_samples):
