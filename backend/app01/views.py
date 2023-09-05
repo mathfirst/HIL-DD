@@ -139,6 +139,7 @@ def sendMoleculeList(request, start=False):
             logger.info(f"proposals: {proposals}")
             shutil.move(proposal_json,
                         os.path.join(proposal_dir, f"proposals_{len(os.listdir(proposal_dir))}.json"))
+            time.sleep(0.1)
             break
     # annotation_dir = os.path.join('./app01/static/', timestamp, 'annotations')
     # os.makedirs(annotation_dir, exist_ok=True)
