@@ -440,12 +440,13 @@ if __name__ == '__main__':
 
         logger.info(f"number of actual updates for injection {inject_counter}: {num_actual_updates}")
         inject_counter += 1
-        save_dict = {'model_state_dict': model_pref.state_dict(),
-                     'cls_state_dict': classifier.state_dict() if cls_fn else None,
-                     'time': time.time(),
-                     'num_likes': num_total_positive_annotations,
-                     'num_dislikes': num_total_negative_annotations}
-        torch.save(save_dict, os.path.join(log_dir, 'model.pt'))
+        if inject_counter >= 2:
+            save_dict = {'model_state_dict': model_pref.state_dict(),
+                         'cls_state_dict': classifier.state_dict() if cls_fn else None,
+                         'time': time.time(),
+                         'num_likes': num_total_positive_annotations,
+                         'num_dislikes': num_total_negative_annotations}
+            torch.save(save_dict, os.path.join(log_dir, 'model.pt'))
         if os.path.isfile(os.path.join(log_dir, 'exit.txt')):
             logger.info('Manually exiting...')
             sys.exit()
