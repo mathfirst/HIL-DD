@@ -1,14 +1,16 @@
 import argparse, os, shutil, torch, sys, copy
 # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
-from datetime import datetime # we use time as a filename when creating that logfile.
+from datetime import datetime  # we use time as a filename when creating that logfile.
 from utils.util_flow import get_logger, load_config, MeanSubtractionNorm, EMA, OnlineAveraging, TimeStepSampler, EarlyStopping
 from torch_geometric.transforms import Compose
 from torch_geometric.loader import DataLoader
-from utils.util_data import get_dataset, ProteinElement2IndexDict, MAP_ATOM_TYPE_AROMATIC_TO_INDEX_wo_h, prepare_inputs
+from utils.util_data import get_dataset, ProteinElement2IndexDict, MAP_ATOM_TYPE_AROMATIC_TO_INDEX_wo_h, prepare_inputs, torchify_dict
 from models.models import Model_CoM_free
 import numpy as np
 import utils.transforms as trans
 from utils.util_sampling import sample4val_eval
+from utils.data import PDBProtein, parse_sdf_file
+from torch_geometric.data import Data
 
 FOLLOW_BATCH = ('protein_element', 'ligand_element', 'ligand_bond_type',)
 
@@ -16,9 +18,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default="./configs/config_ERFM.yml")
     parser.add_argument('--device', type=str, default='cuda')
-    parser.add_argument('--logdir', type=str, default='./logs_rectified_flow')
+    parser.add_argument('--logdir', type=str, default='./logs_finetune')
     parser.add_argument('--desc', type=str, default='')
     parser.add_argument('--suffix', type=str, default='')
+    parser.add_argument('--data4finetune_fir', type=str, default='')
     args = parser.parse_args()
 
     # logging
@@ -80,12 +83,31 @@ if __name__ == '__main__':
     logger.info(f"init_lr: {init_lr}, lr_gamma: {lr_gamma}, lr_warmup_steps: {lr_warmup_steps}, wd: {wd}\n"
                 f"****************************************************************************")
 
+    data_for_finetune_list = []
+    data4finetune_fileList = os.listdir(args.data4finetune_dir)
+    data4finetune_PDBFileList = [f for f in data4finetune_fileList if f.endswith('.pdb')]
+    data4finetune_SDFFileList = [f for f in data4finetune_fileList if f.endswith('.sdf')]
+    data_complex = []
+    for pdb in data4finetune_PDBFileList:
+        for sdf in data4finetune_SDFFileList:
+            if pdb[:4] == sdf[:4]:  # This ensures the correspondence.
+                logger.info(f"complex for fine-tuning {pdb}, {sdf}")
+                pocket_dict = PDBProtein(args.pdb).to_dict_atom()
+                data = Data()
+                for k, v in torchify_dict(pocket_dict).items():
+                    data['protein_' + k] = v
+                data['protein_element_batch'] = torch.zeros(len(data['protein_element']))
+                ligand_dict = parse_sdf_file(args.sdf)
+                for k, v in torchify_dict(ligand_dict).items():
+                    data['ligand_' + k] = v
+                data['ligand_element_batch'] = torch.zeros(len(data['ligand_element']))
+                data_complex.append(data)
+                break
+
     # Transforms
     mode = config.data.transform.ligand_atom_mode
     ligand_featurizer = trans.FeaturizeLigandAtom(mode)
-    transform_list = [
-        ligand_featurizer,
-    ]
+    transform_list = [ligand_featurizer, ]
     if config.data.transform.random_rot:
         logger.info("apply random rotation")
         transform_list.append(trans.RandomRotation())
@@ -97,13 +119,6 @@ if __name__ == '__main__':
         transform=transform,
     )
     train_set, val_set = subsets['train'], subsets['test']
-    # test_data_list = []
-    # for data in val_set:
-    #     one_pair = {}
-    #     for k, v in data.items():
-    #         one_pair[k] = v
-    #     test_data_list.append(one_pair)
-    # torch.save(test_data_list, 'test_data_list.pt')
     collate_exclude_keys = ['ligand_nbh_list']
     train_loader = DataLoader(
         train_set,
@@ -112,8 +127,7 @@ if __name__ == '__main__':
         num_workers=config.train.num_workers,
         follow_batch=FOLLOW_BATCH,
         exclude_keys=collate_exclude_keys,
-        pin_memory=True
-    )
+        pin_memory=True)
     val_loader = DataLoader(val_set, 1, shuffle=False, follow_batch=FOLLOW_BATCH,
                             exclude_keys=collate_exclude_keys, pin_memory=True)
     del dataset, subsets
@@ -158,6 +172,8 @@ if __name__ == '__main__':
     for epoch in range(epochs):
         show_recent_loss = OnlineAveraging(averaging_range=len_history)  # show average loss in this epoch
         for step, batch in enumerate(train_loader):
+            if (step + 1) % len(data_complex):
+                batch = np.random.choice(data_complex, 1)[0]
             model.train()
             # Learning rate warmup
             num_current_steps = epoch * len(train_set) + step
@@ -282,6 +298,8 @@ if __name__ == '__main__':
                     logger.info(f"ema-val mae loss: {[f'{k}:{v:.2f}' for k, v in avg_result_val_mae_ema.items()]}")
                     metric = avg_result_val_mae_ema['loss'] if loss_type == 'MAE' else avg_result_val_ema['loss']
                     scheduler.step(metric)
+                    logger.info('saving model_ema.state_dict()')
+                    torch.save({'model_ema_state_dict': model_ema.state_dict()}, model_ckp)
                     if earlystop(path=model_ckp, logger=logger.info, metric=metric, model=model.state_dict(), model_ema=model_ema.state_dict()):
                         sys.exit()
 

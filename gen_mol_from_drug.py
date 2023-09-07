@@ -40,6 +40,7 @@ if __name__ == '__main__':
     parser.add_argument('--logdir', type=str, default='./logs_refine')
     parser.add_argument('--pdb', type=str, default='')
     parser.add_argument('--sdf', type=str, default='')
+    parser.add_argument('--suffix', type=str, default='')
     args = parser.parse_args()
     config = load_config(args.config)
     pocket_dict = PDBProtein(args.pdb).to_dict_atom()
@@ -53,7 +54,7 @@ if __name__ == '__main__':
     smiles_drug = Chem.MolToSmiles(mol_drug)
     # logging
     current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    log_dir = os.path.join(args.logdir, current_time)
+    log_dir = os.path.join(args.logdir, current_time + '-' + args.suffix if args.suffix else current_time)
     os.makedirs(log_dir, exist_ok=True)
     log_filename = os.path.join(log_dir, "log.txt")
     logger = get_logger('gen-mol-from-drug', log_filename)
@@ -177,15 +178,21 @@ if __name__ == '__main__':
     os.makedirs(sdf_path, exist_ok=True)
     pt_path = os.path.join(log_dir, 'pt')
     os.makedirs(pt_path, exist_ok=True)
+    means = torch.mean(X0_pos, dim=0, keepdim=True)
+    stds = torch.std(X0_pos, dim=0, keepdim=True)
+    logger.info(f'mean: {means}, std: {stds}')
+    # X0_pos, X0_pos_mean = subtract_mean(X0_pos, verbose=True)
+    # logger.info(f"X0_pos_mean: {X0_pos_mean.data}")
+    # X0_pos = X0_pos / (stds + 1e-9)
     for i in range(100):
         calculator = sampling_val(model, data, 0, pos_scale, result_dir, logger, device, ProteinElement2IndexDict,
-                                  num_timesteps=num_timesteps, mode='add_aromatic_wo_h', num_samples=100,
+                                  num_timesteps=num_timesteps, mode='add_aromatic_wo_h', num_samples=10,
                                   cal_vina_score=False, num_spacing_steps=False, bond_emb=True,
                                   cal_straightness=False, t_sampling_strategy='uniform',
-                                  drop_unconnected_mol=True, cls_fn=None, s=0, batch_size=100,
+                                  drop_unconnected_mol=True, cls_fn=None, s=0, batch_size=10,
                                   guidance_type='BCE', protein_pdbqt_file_path='', X0_pos=X0_pos,
                                   X0_element_embedding=X0_ele_feat, X0_bond_embedding=X0_bond_feat, stability_rate=0.5,
-                                  noise_level=0.0005, num_atoms=num_ligand_atoms, protein_pdbqt_dir='', noise_type='VE')
+                                  noise_level=0.01, num_atoms=num_ligand_atoms, protein_pdbqt_dir='', noise_type='VP')
         # X0_pos_copy, X0_ele_feat_copy, X0_bond_feat_copy = perterb_X0(batch_size=1, X0_pos=X0_pos, X0_element_embedding=X0_ele_feat,
         #                                                               X0_bond_embedding=X0_bond_feat, noise_level=0.1)
         # X1_pos, X1_ele_feat, X1_bond_feat = ode(model, protein_pos=protein_pos, protein_ele=protein_ele,
