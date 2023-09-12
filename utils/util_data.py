@@ -80,7 +80,10 @@ def extract_data(batch, dict_protein_ele):
 
 def prepare_inputs(batch, model, ProteinElement2IndexDict, num_timesteps, pos_scale, add_bond, timestep_sampler,
                    n_steps_per_iter=1, device='cpu', t=None):
-    protein_batch, ligand_batch = batch['protein_element_batch'], batch['ligand_element_batch']
+    if 'ligand_element_batch' not in batch:
+        protein_batch, ligand_batch = None, None
+    else:
+        protein_batch, ligand_batch = batch['protein_element_batch'], batch['ligand_element_batch']
     protein_pos, protein_ele, protein_amino_acid, protein_is_backbone, ligand_pos, ligand_ele \
         = extract_data(batch, ProteinElement2IndexDict)
     ligand_bond_types = batch['ligand_bond_type']  # .to(device)

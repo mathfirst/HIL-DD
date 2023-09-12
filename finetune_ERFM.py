@@ -21,14 +21,14 @@ if __name__ == '__main__':
     parser.add_argument('--logdir', type=str, default='./logs_finetune')
     parser.add_argument('--desc', type=str, default='')
     parser.add_argument('--suffix', type=str, default='')
-    parser.add_argument('--data4finetune_fir', type=str, default='')
+    parser.add_argument('--data4finetune_dir', type=str, default='')
     args = parser.parse_args()
 
     # logging
     current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     log_dir = os.path.join(args.logdir, current_time + args.suffix)
     os.makedirs(log_dir, exist_ok=True)
-    logger = get_logger('train', "log.txt")
+    logger = get_logger('train', os.path.join(log_dir, "log.txt"))
     shutil.copy(args.config, os.path.join(log_dir, 'config.yml'))
     current_file = __file__  # get the name of the currently executing python file
     shutil.copy(current_file, os.path.join(log_dir, os.path.basename(current_file).split('.')[0] + '.py'))
@@ -71,9 +71,7 @@ if __name__ == '__main__':
                 f"n_steps_per_iter: {n_steps_per_iter}")
 
     num_pockets = config.train.num_pockets
-    num_samples = config.train.num_samples
-    only_sample = config.train.only_sample  # if True, this code will be only used to sample
-    logger.info(f"When sampling, num_pockets: {num_pockets}, num_samples: {num_samples}, only_sample: {only_sample}\n"
+    logger.info(f"When sampling, num_pockets: {num_pockets}\n"
                 f"********************************************************************")
 
     init_lr = config.train.optimizer.lr
@@ -82,7 +80,16 @@ if __name__ == '__main__':
     wd = config.train.optimizer.weight_decay
     logger.info(f"init_lr: {init_lr}, lr_gamma: {lr_gamma}, lr_warmup_steps: {lr_warmup_steps}, wd: {wd}\n"
                 f"****************************************************************************")
-
+    # Transforms
+    mode = config.data.transform.ligand_atom_mode
+    ligand_featurizer = trans.FeaturizeLigandAtom(mode)
+    transform_list = [ligand_featurizer, ]
+    if config.data.transform.random_rot:
+        logger.info("apply random rotation")
+        transform_list.append(trans.RandomRotation())
+    transform = Compose(transform_list)
+    subtract_mean = MeanSubtractionNorm()  # This is used to center positions.
+    # loading data for finetuning ERFM model
     data_for_finetune_list = []
     data4finetune_fileList = os.listdir(args.data4finetune_dir)
     data4finetune_PDBFileList = [f for f in data4finetune_fileList if f.endswith('.pdb')]
@@ -92,27 +99,23 @@ if __name__ == '__main__':
         for sdf in data4finetune_SDFFileList:
             if pdb[:4] == sdf[:4]:  # This ensures the correspondence.
                 logger.info(f"complex for fine-tuning {pdb}, {sdf}")
-                pocket_dict = PDBProtein(args.pdb).to_dict_atom()
+                pocket_dict = PDBProtein(os.path.join(args.data4finetune_dir, pdb)).to_dict_atom()
                 data = Data()
                 for k, v in torchify_dict(pocket_dict).items():
                     data['protein_' + k] = v
-                data['protein_element_batch'] = torch.zeros(len(data['protein_element']))
-                ligand_dict = parse_sdf_file(args.sdf)
+                data['protein_element_batch'] = torch.zeros(len(data['protein_element']), dtype=torch.long)
+                ligand_dict = parse_sdf_file(os.path.join(args.data4finetune_dir, sdf))
                 for k, v in torchify_dict(ligand_dict).items():
                     data['ligand_' + k] = v
-                data['ligand_element_batch'] = torch.zeros(len(data['ligand_element']))
+                data['ligand_element_batch'] = torch.zeros(len(data['ligand_element']), dtype=torch.long)
+                try:
+                    data = ligand_featurizer(data)
+                except Exception as err:
+                    logger.info(f"when loading {sdf}, {err}")
+                    break
                 data_complex.append(data)
                 break
 
-    # Transforms
-    mode = config.data.transform.ligand_atom_mode
-    ligand_featurizer = trans.FeaturizeLigandAtom(mode)
-    transform_list = [ligand_featurizer, ]
-    if config.data.transform.random_rot:
-        logger.info("apply random rotation")
-        transform_list.append(trans.RandomRotation())
-    transform = Compose(transform_list)
-    subtract_mean = MeanSubtractionNorm()   # This is used to center positions.
     # loading data
     dataset, subsets = get_dataset(
         config=config.data,
@@ -158,7 +161,7 @@ if __name__ == '__main__':
     if config.train.checkpoint:
         logger.info("loading checkpoint " + str(config.train.ckp_path))
         ckp = torch.load(config.train.ckp_path, map_location=device)
-        model.load_state_dict(ckp['model_ema'])
+        model.load_state_dict(ckp['model_ema_state_dict'])
     ema = EMA(beta=ema_decay)
     model_ema = copy.deepcopy(model)
     epochs = int(config.train.epochs)
@@ -172,13 +175,15 @@ if __name__ == '__main__':
     for epoch in range(epochs):
         show_recent_loss = OnlineAveraging(averaging_range=len_history)  # show average loss in this epoch
         for step, batch in enumerate(train_loader):
-            if (step + 1) % len(data_complex):
-                batch = np.random.choice(data_complex, 1)[0]
+            if (step + 1) % 5 != 0:
+                batch = data_complex[np.random.choice(len(data_complex), 1)[0]]
+            # else:
+            #     logger.info(f"{step}, use data from CrossDocked")
             model.train()
             # Learning rate warmup
-            num_current_steps = epoch * len(train_set) + step
-            if num_current_steps < lr_warmup_steps:
-                optimizer.param_groups[0]['lr'] = (num_current_steps + 1) * init_lr / lr_warmup_steps
+            # num_current_steps = epoch * len(train_set) + step
+            # if num_current_steps < lr_warmup_steps:
+            #     optimizer.param_groups[0]['lr'] = (num_current_steps + 1) * init_lr / lr_warmup_steps
 
             protein_pos, protein_ele, protein_amino_acid, protein_is_backbone, \
             Xt_pos, Xt_element_embedding, t, protein_batch, ligand_batch, bond_edges, \
@@ -236,7 +241,8 @@ if __name__ == '__main__':
             if (step + 1) % 20000 == 0 or (step + 1) >= len(train_loader):
                 model.eval()
                 logger.info("saving ema model")
-                torch.save({'model_ema': model_ema.state_dict()}, os.path.join(log_dir, "model_ema.pt"))
+                torch.save({'model_ema_state_dict': model_ema.state_dict()},
+                           os.path.join(log_dir, f"model_{epoch * len(train_loader) + step+1}.pt"))
                 with torch.no_grad():
                     show_recent_val_loss = OnlineAveraging(averaging_range=100)
                     show_recent_val_loss_ema = OnlineAveraging(averaging_range=100)
@@ -298,9 +304,8 @@ if __name__ == '__main__':
                     logger.info(f"ema-val mae loss: {[f'{k}:{v:.2f}' for k, v in avg_result_val_mae_ema.items()]}")
                     metric = avg_result_val_mae_ema['loss'] if loss_type == 'MAE' else avg_result_val_ema['loss']
                     scheduler.step(metric)
-                    logger.info('saving model_ema.state_dict()')
-                    torch.save({'model_ema_state_dict': model_ema.state_dict()}, model_ckp)
-                    if earlystop(path=model_ckp, logger=logger.info, metric=metric, model=model.state_dict(), model_ema=model_ema.state_dict()):
+                    if earlystop(path=model_ckp, logger=logger.info, metric=metric,
+                                 model_ema_state_dict=model_ema.state_dict()):
                         sys.exit()
 
         sample4val_eval(model_ema, val_loader, pos_scale, ema_sample_result_dir, logger=logger, device=device,

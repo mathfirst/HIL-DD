@@ -1,5 +1,5 @@
 import numpy as np
-import time, torch
+import time, torch, os
 from utils.evaluate import CalculateBenchmarks, print_flattened_result
 from .util_data import extract_data, perterb_X0
 from .util_flow import subtract_mean, get_all_bond_edges, measure_straightness
@@ -503,7 +503,7 @@ def sample4val_eval(model, val_loader, pos_scale, result_dir, logger, device, Pr
         protein_pos, mean_vec = subtract_mean(protein_pos.to(device), batch=protein_batch, verbose=True)
         protein_pos *= pos_scale
         calculator = CalculateBenchmarks(pocket_id=pocket_id,
-                                         save_dir=os.path.join(result_dir, 'wo_aromatic_bond'),
+                                         save_dir=result_dir,
                                          aromatic=True, logger=logger)
         if model.add_bond_model:
             bond_edges = model.get_ligand_bond_types_all(num_ligand_atoms=ligand_pos.shape[0],

@@ -243,7 +243,7 @@ if __name__ == '__main__':
                 logger(f"when loading {pt}, {err}")
     t0 = time.time()
     load_flag = True
-    for num_inj in range(10000):
+    for num_inj in range(1000):
         if time.time() - t0 > 10*60:
             logger.info(f"You have made no operations during the past 10 minutes. Exiting...")
             sys.exit()

@@ -144,7 +144,7 @@ if __name__ == '__main__':
     if config.train.checkpoint:
         logger.info("loading checkpoint " + str(config.train.ckp_path))
         ckp = torch.load(config.train.ckp_path, map_location=device)
-        model.load_state_dict(ckp['model_ema'])
+        model.load_state_dict(ckp['model_ema_state_dict'])
     ema = EMA(beta=ema_decay)
     model_ema = copy.deepcopy(model)
     epochs = int(config.train.epochs)
@@ -220,7 +220,7 @@ if __name__ == '__main__':
             if (step + 1) % 20000 == 0 or (step + 1) >= len(train_loader):
                 model.eval()
                 logger.info("saving ema model")
-                torch.save({'model_ema': model_ema.state_dict()}, os.path.join(log_dir, "model_ema.pt"))
+                torch.save({'model_ema_state_dict': model_ema.state_dict()}, os.path.join(log_dir, "model_ema.pt"))
                 with torch.no_grad():
                     show_recent_val_loss = OnlineAveraging(averaging_range=100)
                     show_recent_val_loss_ema = OnlineAveraging(averaging_range=100)
@@ -282,7 +282,8 @@ if __name__ == '__main__':
                     logger.info(f"ema-val mae loss: {[f'{k}:{v:.2f}' for k, v in avg_result_val_mae_ema.items()]}")
                     metric = avg_result_val_mae_ema['loss'] if loss_type == 'MAE' else avg_result_val_ema['loss']
                     scheduler.step(metric)
-                    if earlystop(path=model_ckp, logger=logger.info, metric=metric, model=model.state_dict(), model_ema=model_ema.state_dict()):
+                    if earlystop(path=model_ckp, logger=logger.info, metric=metric,
+                                 model_ema_state_dict=model_ema.state_dict()):
                         sys.exit()
 
         sample4val_eval(model_ema, val_loader, pos_scale, ema_sample_result_dir, logger=logger, device=device,

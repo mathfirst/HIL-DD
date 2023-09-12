@@ -31,7 +31,7 @@ train:
   len_history: 100000
   bond: True
   checkpoint: False
-  ckp_path: config/pretrained/ckp_ERFM.pt
+  ckp_path: configs/ckp_ERFM.pt
   epochs: 100
   batch_size: 1
   num_workers: 4
