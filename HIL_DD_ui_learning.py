@@ -5,15 +5,11 @@ from utils.util_flow import get_logger, load_config, MeanSubtractionNorm, EMA, g
 from torch_geometric.transforms import Compose
 from torch_geometric.loader import DataLoader
 from utils.util_data import get_dataset, ProteinElement2IndexDict, MAP_ATOM_TYPE_AROMATIC_TO_INDEX_wo_h, extract_data, \
-    PreparePrefData4UI, prepare_inputs, NpEncoder, proposal2json
+    PreparePrefData4UI, prepare_inputs, NpEncoder, proposal2json, get_proposals, load_proposal, load_annotation
 from models.models import Model_CoM_free, Classifier
 import numpy as np
 import utils.transforms as trans
-from utils.util_sampling import sampling_val
-from utils.data import PDBProtein
-from utils.evaluate import add_more_ls_to_result_dict, PDB_dict
-import configs.metric_config
-from torch_geometric.data import Data
+from utils.evaluate import PDB_dict
 # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 FOLLOW_BATCH = ('protein_element', 'ligand_element', 'ligand_bond_type',)
@@ -210,6 +206,7 @@ if __name__ == '__main__':
     prepare_pref_data = PreparePrefData4UI(ele_emb_dim=ele_emb_dim,
                                            bond_emb_dim=bond_emb_dim, num_timesteps=num_timesteps,)
     proposal_base_dict = {'mol_list': []}
+    stacked_proposal_dict = {}
     num_proposals_ui = 8
     num_total_positive_annotations = num_total_negative_annotations = 0
     static_dir = f'backend/app01/static/{args.params[0]}/'
@@ -222,61 +219,47 @@ if __name__ == '__main__':
     pt_dir = os.path.join(log_dir, 'final_pt_files')
     os.makedirs(pt_dir, exist_ok=True)
     evaluation_path = os.path.join(f'backend/app01/static/{args.params[0]}/', 'evaluation', 'evaluation.json')
-
-
-    def get_proposals(proposals_dir, proposal_base_dict, logger=print):
-        pt_list = [f for f in os.listdir(proposals_dir) if '.pt' in f]
-        for pt in pt_list:
-            logger(f"loading {pt}")
-            time.sleep(0.1)
-            pt_path = os.path.join(proposals_dir, pt)
-            try:
-                proposals = torch.load(pt_path, map_location='cpu')
-                for k, v in proposals.items():
-                    if isinstance(v, list):
-                        if k in proposal_base_dict:
-                            proposal_base_dict[k] += v
-                        else:
-                            proposal_base_dict[k] = v
-                os.remove(pt_path)
-            except Exception as err:
-                logger(f"when loading {pt}, {err}")
     t0 = time.time()
     load_flag = True
     for num_inj in range(1000):
-        if time.time() - t0 > 10*60:
+        if time.time() - t0 > 15*60:
             logger.info(f"You have made no operations during the past 10 minutes. Exiting...")
             sys.exit()
         t0 = time.time()
         while True:
-            if os.path.isfile(annotation_path):
-                with open(annotation_path, 'r') as f:
-                    t0 = time.time()
-                    time.sleep(0.1)
-                    annotations = json.load(f)
-                    like_ls = annotations['liked_ids']
-                    dislike_ls = annotations['disliked_ids']
-                dst = os.path.join(annotation_dir, f'annotations_{num_inj}.json')
-                shutil.move(annotation_path, dst)
-                logger.info(f"Interaction {len(os.listdir(annotation_dir))}, positive annotations: {len(like_ls)}, "
-                            f"negative annotations: {len(dislike_ls)}")
-                num_total_positive_annotations += len(like_ls)
-                num_total_negative_annotations += len(dislike_ls)
-                time.sleep(0.1)
-                if len(like_ls) + len(dislike_ls) == 0:
-                    logger.info("There are no annotations this time.")
-                else:
-                    prepare_pref_data.storeData(proposal_base_dict, like_ls, dislike_ls)
-                for k, v in proposal_base_dict.items():
-                    if len(proposal_base_dict[k]) >= num_proposals_ui:
-                        proposal_base_dict[k] = proposal_base_dict[k][num_proposals_ui:]  # delete mols that have been used
-                load_flag = True
-            if load_flag:
-                get_proposals(pt_dir, proposal_base_dict, logger=logger.info)
-                load_flag = not proposal2json(proposals_path, evaluation_path, proposal_base_dict, num_total_positive_annotations,
-                                              num_total_negative_annotations, num_inj, num_proposals_ui)
-                if load_flag is False:
-                    logger.info(f"num_inj {num_inj}, proposals loaded {load_flag}")
+            load_flag = load_proposal(load_flag, pt_dir, proposals_dir, evaluation_path, proposal_base_dict,
+                                      stacked_proposal_dict, num_inj, num_proposals_ui, logger=logger.info)
+            load_flag, num_total_positive_annotations, num_total_negative_annotations = load_annotation(annotation_dir,
+                            num_inj, num_total_positive_annotations, num_total_negative_annotations, prepare_pref_data,
+                            stacked_proposal_dict, num_proposals_ui, load_flag, logger=logger.info)
+            # if load_flag:
+            #     get_proposals(pt_dir, proposal_base_dict, logger=logger.info)
+            #     load_flag = not proposal2json(proposals_path, evaluation_path, proposal_base_dict, num_total_positive_annotations,
+            #                                   num_total_negative_annotations, num_inj, num_proposals_ui)
+            #     if load_flag is False:
+            #         logger.info(f"num_inj {num_inj}, proposals loaded {load_flag}")
+            # if os.path.isfile(annotation_path):
+            #     with open(annotation_path, 'r') as f:
+            #         t0 = time.time()
+            #         time.sleep(0.1)
+            #         annotations = json.load(f)
+            #         like_ls = annotations['liked_ids']
+            #         dislike_ls = annotations['disliked_ids']
+            #     dst = os.path.join(annotation_dir, f'annotations_{num_inj}.json')
+            #     shutil.move(annotation_path, dst)
+            #     logger.info(f"Interaction {len(os.listdir(annotation_dir))}, positive annotations: {len(like_ls)}, "
+            #                 f"negative annotations: {len(dislike_ls)}")
+            #     num_total_positive_annotations += len(like_ls)
+            #     num_total_negative_annotations += len(dislike_ls)
+            #     time.sleep(0.1)
+            #     if len(like_ls) + len(dislike_ls) == 0:
+            #         logger.info("There are no annotations this time.")
+            #     else:
+            #         prepare_pref_data.storeData(proposal_base_dict, like_ls, dislike_ls)
+            #     for k, v in proposal_base_dict.items():
+            #         if len(proposal_base_dict[k]) >= num_proposals_ui:
+            #             proposal_base_dict[k] = proposal_base_dict[k][num_proposals_ui:]  # delete mols that have been used
+            #     load_flag = True
 
             if num_total_positive_annotations >= 2 and num_total_negative_annotations >= 2:
                 logger.info(f"Number of total annotations: {num_total_positive_annotations + num_total_negative_annotations}")
@@ -323,7 +306,7 @@ if __name__ == '__main__':
                 if config.pref.only_cls_guide:
                     logger.info(f"logits: {['%.2f' % logit for logit in logits_cls.detach()]}, "
                                 f"cls_loss: {loss_cls.item():.2f}, avg_loss: {avg_cls_loss:.2f}")
-                    if step < 50 - 1:
+                    if step < num_updates_per_injection - 1:
                         continue
                     else:
                         break
@@ -363,7 +346,7 @@ if __name__ == '__main__':
                 if positive_logits < 0.8 * negative_logits:
                     logger.info(f"skip iteration {step}. positive_logits: {positive_logits:.2f}, "
                                 f"negative_logits: {negative_logits:.2f}")
-                    if step >= 50 - 1:
+                    if step >= num_updates_per_injection - 1:
                         break  # num_update_steps > max_num_update_steps
                     else:  # when the model distinguishes good samples and bad samples well, we skip this iteration.
                         continue
@@ -435,7 +418,7 @@ if __name__ == '__main__':
                     f"pref_loss: {loss_pref.item():.2f}, coef: {coef:.2f}, lr: {optimizer_pref.param_groups[0]['lr']:.6f}, "
                     f"grad: {orig_grad_norm.item():.2f}, {[f'{k}:{v:.2f}' for k, v in avg_result.items()]}, pref {query}, "
                     f"loss_cls: {loss_cls.item():.2f}")
-            if step >= 49:
+            if step >= num_updates_per_injection - 1:
                 break
 
         logger.info(f"number of actual updates for injection {inject_counter}: {num_actual_updates}")

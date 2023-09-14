@@ -78,9 +78,9 @@ pref:
   num_samples_eval: 8
   num_rounds: 5
   num_injections_per_round: 12
-  cal_vina_score: True
+  cal_vina_score: False
   temperature: 0.5
-  num_updates_per_injection: 50
+  num_updates_per_injection: 25
   max_num_updates: 200
   noise: 0.0
   pocket_idx: 4
@@ -98,9 +98,9 @@ pref:
     num_val_iterations: 100
   increasing_num_updates: True
   ckp: False
-  sample_batchsize: 13
+  sample_batchsize: 16
   only_cls_guide: False
   guide_with_pocket: False
   all_pref_data: False
   proposal_dir: './tmp/samples_pocket4_proposals'
-  num_atoms: 18
+  num_atoms: 20

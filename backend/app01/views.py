@@ -1,17 +1,37 @@
 import shutil
 import time
 
+import numpy as np
 from django.shortcuts import render, HttpResponse, redirect
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
-import os, subprocess, json
+import os, subprocess, json, sys
 from subprocess import Popen
 
 DETACHED_PROCESS = 0x00000008
-from sys import platform
+
+if sys.version_info[0] < 3:
+    from StringIO import BytesIO
+else:
+    from io import BytesIO
+
+import pandas as pd
 
 
-# sys.path.append('../../../HIL-DD')
+def get_free_gpu():
+    gpu_stats = subprocess.check_output(["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"])
+    gpu_df = pd.read_csv(BytesIO(gpu_stats),
+                         names=['memory.used', 'memory.free'],
+                         skiprows=1)
+    logger.info('GPU usage:\n{}'.format(gpu_df))
+    gpu_df['memory.free'] = gpu_df['memory.free'].map(lambda x: x.rstrip(' [MiB]'))
+    # idx = np.argmax(gpu_df['memory.free'])
+    indices = np.argpartition(gpu_df['memory.free'], -3)[-3:]  # get the indices of the GPUs with top 3 free memory
+    for idx in indices:
+        logger.info('Returning GPU{} with {} free MiB'.format(idx, gpu_df.iloc[idx]['memory.free']))
+    return indices
+
+
 # Create your views here.
 def get_logger(name, log_filename=None):
     import logging
@@ -46,6 +66,7 @@ def test(request):
 
 def getPDBList(request):
     import pandas as pd
+    logger.info(f"getPDBList: {os.getcwd()}")
     df = pd.read_csv("../configs/PDB_ID_CrossDocked_testset.csv", encoding="utf-8")
     full_pdb_dir = './app01/static/full_pdb/'
     if not os.path.isdir(full_pdb_dir):
@@ -88,14 +109,33 @@ def getTimePDB(request):  # api/confirmpdb/
         os.chdir('../')
         output = os.getcwd()
         logger.info(f'after changing dir {output}')
-    Popen(['python3', 'HIL_DD_ui_proposals.py', timestamp, pdb, '--device', 'cuda:1'], shell=False,
-          close_fds=True)  # , creationflags=DETACHED_PROCESS)
-    time.sleep(30)
-    Popen(['python3', 'HIL_DD_ui_learning.py', timestamp, pdb, '--device', 'cuda:2'], shell=False,
-          close_fds=True)  # , creationflags=DETACHED_PROCESS)
-    time.sleep(20)
-    Popen(['python3', 'HIL_DD_ui_evaluation.py', timestamp, pdb, '--device', 'cuda:3'], shell=False,
-          close_fds=True)  # , creationflags=DETACHED_PROCESS)
+    # gpu_indices = get_free_gpu()
+    gpu_indices = np.random.randint(0, 6, 3)
+    logger.info(f"use GPU:{gpu_indices[0]} to propose")
+    logger.info(f"use GPU:{gpu_indices[1]} to learn")
+    logger.info(f"use GPU:{gpu_indices[2]} to evaluate")
+    pyfile_propose = '/datapool/data2/home/pengxingang/zhaoyouming/HIL-DD/HIL_DD_ui_proposals.py'
+    pycmd_propose = ' '.join(['python3', pyfile_propose, timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[0])])
+    logger.info(pycmd_propose)
+    Popen(['bash', 'script.sh', '35', pycmd_propose], shell=False, close_fds=True)
+    Popen(['bash', 'script.sh', '42', pycmd_propose], shell=False, close_fds=True)
+    # Popen(['python3', propose_pyfile, timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[0])], shell=False,
+    #       close_fds=True)
+    time.sleep(25)
+    pyfile_learn = '/datapool/data2/home/pengxingang/zhaoyouming/HIL-DD/HIL_DD_ui_learning.py'
+    pycmd_learn = ' '.join(['python3', pyfile_learn, timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[1])])
+    logger.info(pycmd_learn)
+    Popen(['bash', 'script.sh', '36', pycmd_learn], shell=False, close_fds=True)
+    # Popen(['python3', 'HIL_DD_ui_learning.py', timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[1])], shell=False,
+    #       close_fds=True)
+    time.sleep(25)
+    pyfile_eval = '/datapool/data2/home/pengxingang/zhaoyouming/HIL-DD/HIL_DD_ui_evaluation.py'
+    pycmd_eval = ' '.join(['python3', pyfile_eval, timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[2])])
+    logger.info(pycmd_eval)
+    Popen(['bash', 'script.sh', '38', pycmd_eval], shell=False, close_fds=True)
+    Popen(['bash', 'script.sh', '43', pycmd_eval], shell=False, close_fds=True)
+    # Popen(['python3', 'HIL_DD_ui_evaluation.py', timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[2])], shell=False,
+    #       close_fds=True)
     output = os.getcwd()
     if output.strip().endswith('HIL-DD'):
         os.chdir('./backend/')
@@ -128,18 +168,31 @@ def sendMoleculeList(request, start=False):
     pdb = str(request.POST.get('pdb_id'))
     logger.info(f'sendMoleculeList: {timestamp}, {pdb}')
     proposal_dir = os.path.join('./app01/static/', timestamp, 'proposals')
-    proposal_json = os.path.join(proposal_dir, 'proposals.json')
-    logger.info(f"sendMoleculeList: {os.path.abspath(proposal_json)}")
+    used_proposal_dir = os.path.join('./app01/static/', timestamp, 'used_proposals')
+    os.makedirs(used_proposal_dir, exist_ok=True)
+    # proposal_json = os.path.join(proposal_dir, 'proposals.json')
+    # logger.info(f"sendMoleculeList: {os.path.abspath(proposal_json)}")
     while True:
-        if os.path.isfile(proposal_json):
+        proposal_files = [f for f in os.listdir(proposal_dir) if f.endswith('.json')]
+        if len(proposal_files):
+            logger.info(f"before sorting proposal filenames: {proposal_files}")
+            proposal_files.sort(key=lambda x: np.longlong(x.split('.')[0].split('_')[1]))
+            logger.info(f"after sorting proposal filenames: {proposal_files}")
+            proposal_json = os.path.join(proposal_dir, proposal_files[0])
+        # if os.path.isfile(proposal_json):
             logger.info(f"loading {proposal_json}")
-            time.sleep(0.1)
-            with open(proposal_json, 'r') as f:
-                proposals = json.load(f)
-            shutil.move(proposal_json,
-                        os.path.join(proposal_dir, f"proposals_{len(os.listdir(proposal_dir))}.json"))
+            while True:
+                try:
+                    with open(proposal_json, 'r') as f:
+                        proposals = json.load(f)
+                        # proposals = json.loads(f.read())
+                    break
+                except Exception as err:
+                    logger.info(f"error when reading proposal file: {err}")
+                    time.sleep(0.5)
+            shutil.move(proposal_json, used_proposal_dir)
+                        # os.path.join(proposal_dir, f"proposals_{len(os.listdir(proposal_dir))}.json"))
             logger.info(f"proposals: {proposals}")
-            time.sleep(0.1)
             break
     # annotation_dir = os.path.join('./app01/static/', timestamp, 'annotations')
     # os.makedirs(annotation_dir, exist_ok=True)

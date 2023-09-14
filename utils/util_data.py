@@ -4,6 +4,7 @@ from torch.utils.data import Subset
 from torch_geometric.data import Data
 import numpy as np
 from .util_flow import prepare_proposals, get_Xt, get_all_bond_edges, subtract_mean
+from datetime import datetime
 
 
 def torchify_dict(data):
@@ -216,6 +217,107 @@ class PreparePrefData4UI:
                                                                                self.num_timesteps, t=t,
                                                                                time_sampler=timestep_sampler)
         return Xt_pos_pair, Xt_ele_emb_pair, Xt_bond_emb_pair, t_int, t_bond
+
+
+import time
+
+
+def get_proposals(proposals_dir, proposal_base_dict, logger=print):
+    pt_list = [f for f in os.listdir(proposals_dir) if '.pt' in f]
+    for pt in pt_list:
+        logger(f"loading {pt}")
+        time.sleep(0.1)
+        pt_path = os.path.join(proposals_dir, pt)
+        try:
+            proposals = torch.load(pt_path, map_location='cpu')
+            for k, v in proposals.items():
+                if isinstance(v, list):
+                    if k in proposal_base_dict:
+                        proposal_base_dict[k] += v
+                    else:
+                        proposal_base_dict[k] = v
+            os.remove(pt_path)
+        except Exception as err:
+            logger(f"when loading {pt}, {err}")
+
+
+def proposal_stacked_json(proposals_dir, evaluation_path, proposal_base_dict, stacked_proposal_dict, num_inj, num_proposals_ui, logger=print):
+    if len(proposal_base_dict['mol_list']) >= num_proposals_ui:
+        logger(f"{num_inj} making proposals")
+        if os.path.isfile(evaluation_path):
+            check_prompt = True  # evaluation condition
+        else:
+            check_prompt = False
+        dict_proposals = {'next_molecules': [], 'check_prompt': check_prompt}
+        for i in range(num_proposals_ui):
+            molecule = {'id': i,
+                        'smiles': proposal_base_dict['smiles_list'][i],
+                        'url': proposal_base_dict['sdf_path_list'][i],
+                        'png_url': proposal_base_dict['png_path_list'][i],
+                        'metrics': {'Vina': proposal_base_dict['vina_score_list'][i],
+                                    'QED': proposal_base_dict['qed_list'][i],
+                                    'SA': proposal_base_dict['sa_list'][i],
+                                    'Lipinski': proposal_base_dict['lipinski_list'][i],
+                                    'NumAtoms': proposal_base_dict['num_atoms_list'][i],
+                                    'NumBonds': proposal_base_dict['num_bonds_list'][i],
+                                    'NumRings': proposal_base_dict['num_rings_list'][i],
+                                    'NumBenzeneRings': proposal_base_dict['num_benzene_rings_list'][i],
+                        },
+            }
+            dict_proposals['next_molecules'].append(molecule)
+        proposals_path = os.path.join(proposals_dir, f'proposals_{datetime.now().strftime("%H%M%S%f")[:-3]}.json')
+        with open(proposals_path, "w") as outfile:
+            json.dump(dict_proposals, outfile, cls=NpEncoder, indent=2)
+        for k, v in proposal_base_dict.items():
+            if isinstance(v, list):
+                if k in stacked_proposal_dict:
+                    stacked_proposal_dict[k] += v[:num_proposals_ui]
+                else:
+                    stacked_proposal_dict[k] = v[:num_proposals_ui]
+                proposal_base_dict[k] = proposal_base_dict[k][num_proposals_ui:]  # delete mols that have been stacked
+        return True  # made proposals
+    else:
+        return False  # did not make proposals
+
+
+def load_proposal(load_flag, pt_dir, proposals_dir, evaluation_path, proposal_base_dict, stacked_proposal_dict,
+                  num_inj, num_proposals_ui, logger=print):
+    # if load_flag or len(proposals_dir) != 0:
+    get_proposals(pt_dir, proposal_base_dict, logger=logger)
+    load_flag = not proposal_stacked_json(proposals_dir, evaluation_path, proposal_base_dict,
+                                          stacked_proposal_dict, num_inj, num_proposals_ui, logger=print)
+    if load_flag is False:
+        logger(f"num_inj {num_inj}, proposals loaded {load_flag}")
+    return load_flag
+
+
+import shutil
+
+
+def load_annotation(annotation_dir, num_inj, num_total_positive_annotations, num_total_negative_annotations,
+                    prepare_pref_data, stacked_proposal_dict, num_proposals_ui, load_flag, logger=print):
+    annotation_path = os.path.join(annotation_dir, 'annotations.json')
+    if os.path.isfile(annotation_path):
+        with open(annotation_path, 'r') as f:
+            time.sleep(0.5)
+            annotations = json.load(f)
+            like_ls = annotations['liked_ids']
+            dislike_ls = annotations['disliked_ids']
+        dst = os.path.join(annotation_dir, f'annotations_{num_inj}.json')
+        shutil.move(annotation_path, dst)
+        logger(f"Interaction {len(os.listdir(annotation_dir))}, positive annotations: {len(like_ls)}, "
+               f"negative annotations: {len(dislike_ls)}")
+        num_total_positive_annotations += len(like_ls)
+        num_total_negative_annotations += len(dislike_ls)
+        # time.sleep(0.05)
+        if len(like_ls) + len(dislike_ls) == 0:
+            logger("There are no annotations this time.")
+        else:
+            prepare_pref_data.storeData(stacked_proposal_dict, like_ls, dislike_ls)
+        for k, v in stacked_proposal_dict.items():
+            stacked_proposal_dict[k] = stacked_proposal_dict[k][num_proposals_ui:] #delete mols that have been used
+        load_flag = True
+    return load_flag, num_total_positive_annotations, num_total_negative_annotations
 
 
 def proposal2json(proposals_path, evaluation_path, proposal_base_dict, num_total_positive_annotations,

@@ -238,13 +238,13 @@ if __name__ == '__main__':
         proposals = sampling_val(model_pref, pocket_data, pocket_idx, pos_scale, proposals_dir,
                                  logger, device, ProteinElement2IndexDict, num_timesteps=num_timesteps, mode=mode,
                                  num_pockets=pocket_idx, all_val_pockets=False, bond_emb=True,
-                                 num_samples=num_samples_eval, cal_vina_score=True,
+                                 num_samples=num_samples_eval, cal_vina_score=config.pref.cal_vina_score,
                                  cal_straightness=False, num_spacing_steps=100, num_atoms=config.pref.num_atoms,
                                  starting_pocket_id=0, t_sampling_strategy='uniform',
                                  batch_size=config.pref.sample_batchsize, protein_pdbqt_file_path='',
                                  protein_pdbqt_dir='configs/test_protein')
         shutil.move(proposals.pt_filename, os.path.join(pt_dir, f'proposal_{num_inj}.pt'))
 
-        if os.path.isfile(os.path.join(log_dir, 'exit.txt')) or time.time() - t0 > 10*60:
+        if os.path.isfile(os.path.join(log_dir, 'exit.txt')) or time.time() - t0 > 15*60:
             logger.info('Manually exiting...')
             sys.exit()

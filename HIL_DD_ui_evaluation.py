@@ -212,12 +212,13 @@ if __name__ == '__main__':
                     logger.info(f"loading {ckp_path}")
                     ckp = torch.load(ckp_path, map_location=device)
                     logger.info(f"loading is done")
-                    if ckp_time != ckp['time'] or not os.path.join(evaluation_path):
+                    if ckp_time != ckp['time']:
                         ckp_time = ckp['time']
                         t0 = time.time()
                     break
                 except Exception as err:
                     logger.info(err)
+                    time.sleep(0.5)
                     continue
         else:
             continue
@@ -231,7 +232,7 @@ if __name__ == '__main__':
                                        device, ProteinElement2IndexDict, num_timesteps=num_timesteps, mode=mode,
                                        num_pockets=pocket_idx, all_val_pockets=False, bond_emb=True,
                                        num_samples=num_samples_eval, cal_vina_score=config.pref.cal_vina_score,
-                                       cal_straightness=False, num_spacing_steps=config.pref.num_spacing_steps,
+                                       cal_straightness=False, num_spacing_steps=200,
                                        starting_pocket_id=0, guidance_type=cls_loss_type, num_atoms=config.pref.num_atoms,
                                        t_sampling_strategy='uniform', cls_fn=cls_fn, s=s[0],
                                        batch_size=config.pref.sample_batchsize, protein_pdbqt_file_path='',

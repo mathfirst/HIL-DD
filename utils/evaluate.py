@@ -387,7 +387,7 @@ def calculate_vina_score(rdmol, pocket_id, sdf_filename_path, protein_pdbqt_dir=
                     --exhaustiveness {exhaust} --out {output} > {txt_file} ".format(  # --out {output}
         receptor_id=protein_pdbqt_file_path,
         ligand_id=ligand_pdbqt_filename_path,
-        exhaust=64,
+        exhaust=100,
         center_x=center[0],
         center_y=center[1],
         center_z=center[2],
