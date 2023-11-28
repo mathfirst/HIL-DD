@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('--logdir', type=str, default='./logs_sampling')
     parser.add_argument('--desc', type=str, default='')
     parser.add_argument('--suffix', type=str, default='')
-    parser.add_argument('--pdb', type=str, default='')
+    parser.add_argument('--pdb_path', type=str, default='')
     parser.add_argument('--receptor_path', type=str, default='')
     # specify the number of atoms in a ligand or a specific number, e.g. 18
     parser.add_argument('--num_atoms', type=str, default='18')  # 'reference' means the same number of atoms as the reference ligand in the test set

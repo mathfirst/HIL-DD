@@ -190,7 +190,7 @@ python sampling4pocket.py --device cuda --config configs/sampling.yml --pdb_path
 If you need to calculate the binding affinity, ensure that you have the complete protein pocket file in the `examples/` directory. 
 Then, run the command as shown below:
 ```shell
-python sampling4pocket.py --device cuda --config configs/sampling.yml --pdb_path examples/2V3R.pdb --full_pdbqt_path examples/2V3R_full.pdbqt
+python sampling4pocket.py --device cuda --config configs/sampling.yml --pdb_path examples/2V3R.pdb --receptor_path examples/2V3R_full.pdbqt
 ```
 
 To finetune a pretrained ERFM, use the following command:
