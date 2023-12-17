@@ -166,7 +166,7 @@ In the `select_proposals.py` file, you can specify the lower and upper threshold
 Vina score, bond angle, bond length, benzene ring, large ring, and dihedral angle deviation. By default, the thresholds 
 for Vina score are -7 and -9. For more details, please refer to the last lines of the `select_proposals.py` file. 
 The minimum number of positive and negative samples is determined by `config.pref.num_positive_samples x config.pref.proposal_factor` 
-and `config.pref.num_positive_samples x config.pref.proposal_factor`, respectively.
+and `config.pref.num_negative_samples x config.pref.proposal_factor`, respectively.
 
 ---
 
