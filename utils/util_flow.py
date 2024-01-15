@@ -466,7 +466,7 @@ def prepare_proposals(num_positive_samples, num_negative_samples, pairs_path=Non
     target_pos_pair = sample_X1_pos - sample_X0_pos
     target_ele_emb_pair = sample_X1_ele_emb - sample_X0_ele_emb
     target_bond_emb_pair = sample_X1_bond_emb - sample_X0_bond_emb
-    if 'benzene' in query or 'large_ring' in query:
+    if 'benzene' in query or 'large_ring' in query or 'human' == query:
         labels = torch.zeros(num_positive_samples + num_negative_samples)
         if num_positive_samples:
             labels[:num_positive_samples] = 1.0 / num_positive_samples

@@ -5,16 +5,6 @@ import torch, os
 import numpy as np
 import pandas as pd
 
-# bond_length_score_dict = torch.load('./bond_length_distribution_dict_bin_width_0.02.pt')
-# true_bond_freq = torch.load('./bond_appearance_prob.pt')
-# true_bond_angle_type_proba = torch.load('bond_angle_type_proba.pt')
-# true_bond_angle_distribution = torch.load('./bond_angle_model_dict_bin_width_2.pt')
-# true_dihedral_type_proba = torch.load('true_triple_bond_type_distribution.pt')
-# true_dihedral_log_likehood_distribution = torch.load('dihedral_angle_model_dict.pt')
-# true_ring_distribution = torch.load('ring_distribution.pt')
-# typical_dihedral_angles = torch.load('typical_dihedral_angles.pt')
-# typical_bond_angles = torch.load('typical_bond_angles.pt')
-
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
 

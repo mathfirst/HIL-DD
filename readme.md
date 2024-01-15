@@ -22,7 +22,8 @@ We will try our best to assist you. Any feedback is highly appreciated.
 ---
 
 ## Overview of the Model
-We introduce HIL-DD to bridge the gap between human experts and AI.
+We introduce HIL-DD to bridge the gap between human experts and AI. Please check out [this 1.5-minute video](https://drive.google.com/file/d/1LlnnQ3CXMwOqCMVAa_gD3ZwvV-lwfkpa/view?usp=drive_link) for a real-time interaction which showcases 
+how human experts injects their preference (better vina scores in this case) into our algorithm HIL-DD and HIL-DD learns the preference quickly.
 
 <p align="center">
   <img src="figures/framework.png" width="800" height="400">
