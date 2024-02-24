@@ -111,7 +111,7 @@ we have stored those pockets in `configs/test_data_list.pt`, so you can skip the
 The folder `data` is supposed to be **parallel** with the folder `HIL-DD`.
 2. Extract the TAR archive using the command: `tar -xzvf crossdocked_pocket10.tar.gz`.
 3. Download `test_protein.zip` from [here](https://drive.google.com/file/d/1gyrSIy8uYjtWgzhP5tQxptyR9QlN2o3R/view?usp=drive_link) and unzip it under `./configs`.
-4Preprocess data by running the **first** command in the Code Usage section. 
+4. Preprocess data by running the **first** command in the Code Usage section. 
 
 Please note that it may take approximately **2 hours** to preprocess the data when training ERFM or HIL-DD for the first time. 
 This step is required for training and preference learning.
