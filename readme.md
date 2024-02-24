@@ -87,7 +87,15 @@ the beauty of preference learning in a few minutes.
 
 ---
 
-## Dependencies
+## System requirements
+### Hardware requirements
+HIL-DD requires a standard computer with at least one graphics processing unit (GPU). In terms of GPU, the code has beed tested on 
+VIDIA GeForce RTX 2060 and 4090. You may want to run our web-based graphical user interface (GUI). In this case, if you have more GPUs, 
+you can indeed achieve better real-time performance. We usually use 3 GPUs to run our web-based GUI. More specifically, 
+these 4 GPUs are used to propose samples, learn human preferences, and evaluate learning performance, respctively.
+
+
+### Dependencies
 
 We recommend using [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html) to 
 create an environment for installing all dependencies. If you have Anaconda installed, please run the following command 
