@@ -1,8 +1,8 @@
 data:
   name: pl
-  path: ./data/crossdocked_pocket10
-  split: ./data/split_by_name.pt
-  path_name2id: ./data/crossdocked_pocket10_name2id.pt
+  path: ../data/crossdocked_pocket10
+  split: ../data/split_by_name.pt
+  path_name2id: ../data/crossdocked_pocket10_name2id.pt
   feat_dim: 32         # the dimension of feature embeddings
   pos_scale: 1.0
   transform:

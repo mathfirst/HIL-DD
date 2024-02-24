@@ -95,23 +95,23 @@ if __name__ == '__main__':
         transform_list.append(trans.RandomRotation())
     transform = Compose(transform_list)
     subtract_mean = MeanSubtractionNorm()  # This is used to center positions.
-    dataset, subsets = get_dataset(
-        config=config.data,
-        transform=transform,
-    )
-
-    train_set = subsets['train']
-    collate_exclude_keys = ['ligand_nbh_list']
-    train_loader = DataLoader(
-        train_set,
-        batch_size=config.train.batch_size,
-        shuffle=config.train.shuffle,
-        num_workers=config.train.num_workers,
-        follow_batch=FOLLOW_BATCH,
-        exclude_keys=collate_exclude_keys,
-        pin_memory=True
-    )
-    del dataset, subsets
+    # dataset, subsets = get_dataset(
+    #     config=config.data,
+    #     transform=transform,
+    # )
+    #
+    # train_set = subsets['train']
+    # collate_exclude_keys = ['ligand_nbh_list']
+    # train_loader = DataLoader(
+    #     train_set,
+    #     batch_size=config.train.batch_size,
+    #     shuffle=config.train.shuffle,
+    #     num_workers=config.train.num_workers,
+    #     follow_batch=FOLLOW_BATCH,
+    #     exclude_keys=collate_exclude_keys,
+    #     pin_memory=True
+    # )
+    # del dataset, subsets
 
     sample_result_dir = os.path.join(log_dir, 'sample-results')
     os.makedirs(sample_result_dir, exist_ok=True)

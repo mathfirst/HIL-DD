@@ -1,11 +1,10 @@
-import json, os, torch
+import json, os, torch, time
 from datasets.pl_pair_dataset import PocketLigandPairDataset
 from torch.utils.data import Subset
 from torch_geometric.data import Data
 import numpy as np
 from .util_flow import prepare_proposals, get_Xt, get_all_bond_edges, subtract_mean
 from datetime import datetime
-
 
 def torchify_dict(data):
     # from TargetDiff code
@@ -126,14 +125,15 @@ def prepare_inputs(batch, model, ProteinElement2IndexDict, num_timesteps, pos_sc
     target_element_embedding = X1_element_embedding - X0_element_embedding
     t = t.repeat(1, ligand_pos.shape[0]).reshape(-1, 1).to(device)  # n_steps_per_iter=2, e.g. [0,0,0,1,1,1]
     t_float = (t * 1.0) / num_timesteps
-    Xt_pos = t_float * X1_pos.repeat(n_steps_per_iter, 1) + (1. - t_float) * X0_pos.repeat(n_steps_per_iter, 1)
+    # print("X1_pos.shape", X1_pos.squeeze().shape, "X1_pos.shape", X1_pos.squeeze().shape, "n_steps_per_iter", n_steps_per_iter)
+    Xt_pos = t_float * X1_pos.squeeze().repeat(n_steps_per_iter, 1) + (1. - t_float) * X0_pos.squeeze().repeat(n_steps_per_iter, 1)
     Xt_element_embedding = t_float * X1_element_embedding.repeat(n_steps_per_iter, 1) \
                            + (1. - t_float) * X0_element_embedding.repeat(n_steps_per_iter, 1)
     return protein_pos.to(device), protein_ele.to(device), protein_amino_acid.to(device), protein_is_backbone.to(
         device), \
         Xt_pos.to(device), Xt_element_embedding.to(device), t.squeeze().to(
         device), protein_batch, ligand_batch, bond_edges, \
-        Xt_bond_embedding, target_pos.repeat(n_steps_per_iter, 1).to(device), \
+        Xt_bond_embedding, target_pos.squeeze().repeat(n_steps_per_iter, 1).to(device), \
         target_element_embedding.repeat(n_steps_per_iter, 1).to(device), \
         target_bond_features, X1_pos, t_bond
 
@@ -217,9 +217,6 @@ class PreparePrefData4UI:
                                                                                self.num_timesteps, t=t,
                                                                                time_sampler=timestep_sampler)
         return Xt_pos_pair, Xt_ele_emb_pair, Xt_bond_emb_pair, t_int, t_bond
-
-
-import time
 
 
 def get_proposals(proposals_dir, proposal_base_dict, logger=print):

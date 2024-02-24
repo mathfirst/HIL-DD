@@ -9,3 +9,4 @@
 ./tmp/
 ./backend/static/full_pdb/
 ./logs_refine/
+./backend/package-lock.json

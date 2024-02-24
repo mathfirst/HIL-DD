@@ -272,3 +272,4 @@ def parse_sdf_file(path):
         'hybridization': hybridization
     }
     return data
+

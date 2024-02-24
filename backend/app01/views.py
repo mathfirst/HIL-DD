@@ -110,32 +110,32 @@ def getTimePDB(request):  # api/confirmpdb/
         output = os.getcwd()
         logger.info(f'after changing dir {output}')
     # gpu_indices = get_free_gpu()
-    gpu_indices = np.random.randint(0, 6, 3)
+    gpu_indices = np.random.randint(0, 1, 3)
     logger.info(f"use GPU:{gpu_indices[0]} to propose")
     logger.info(f"use GPU:{gpu_indices[1]} to learn")
     logger.info(f"use GPU:{gpu_indices[2]} to evaluate")
-    pyfile_propose = '/datapool/data2/home/pengxingang/zhaoyouming/HIL-DD/HIL_DD_ui_proposals.py'
+    pyfile_propose = './HIL_DD_ui_proposals.py'
     pycmd_propose = ' '.join(['python3', pyfile_propose, timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[0])])
     logger.info(pycmd_propose)
-    Popen(['bash', 'script.sh', '35', pycmd_propose], shell=False, close_fds=True)
-    Popen(['bash', 'script.sh', '42', pycmd_propose], shell=False, close_fds=True)
-    # Popen(['python3', propose_pyfile, timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[0])], shell=False,
-    #       close_fds=True)
-    time.sleep(25)
-    pyfile_learn = '/datapool/data2/home/pengxingang/zhaoyouming/HIL-DD/HIL_DD_ui_learning.py'
+    # Popen(['bash', 'script.sh', '35', pycmd_propose], shell=False, close_fds=True)
+    # Popen(['bash', 'script.sh', '42', pycmd_propose], shell=False, close_fds=True)
+    Popen(['python', pyfile_propose, timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[0])], shell=False,
+          close_fds=True)
+    time.sleep(30)
+    pyfile_learn = './HIL_DD_ui_learning.py'
     pycmd_learn = ' '.join(['python3', pyfile_learn, timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[1])])
     logger.info(pycmd_learn)
-    Popen(['bash', 'script.sh', '36', pycmd_learn], shell=False, close_fds=True)
-    # Popen(['python3', 'HIL_DD_ui_learning.py', timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[1])], shell=False,
-    #       close_fds=True)
-    time.sleep(25)
-    pyfile_eval = '/datapool/data2/home/pengxingang/zhaoyouming/HIL-DD/HIL_DD_ui_evaluation.py'
+    # Popen(['bash', 'script.sh', '36', pycmd_learn], shell=False, close_fds=True)
+    Popen(['python', 'HIL_DD_ui_learning.py', timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[1])], shell=False,
+          close_fds=True)
+    time.sleep(30)
+    pyfile_eval = './HIL_DD_ui_evaluation.py'
     pycmd_eval = ' '.join(['python3', pyfile_eval, timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[2])])
     logger.info(pycmd_eval)
-    Popen(['bash', 'script.sh', '38', pycmd_eval], shell=False, close_fds=True)
-    Popen(['bash', 'script.sh', '43', pycmd_eval], shell=False, close_fds=True)
-    # Popen(['python3', 'HIL_DD_ui_evaluation.py', timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[2])], shell=False,
-    #       close_fds=True)
+    # Popen(['bash', 'script.sh', '38', pycmd_eval], shell=False, close_fds=True)
+    # Popen(['bash', 'script.sh', '43', pycmd_eval], shell=False, close_fds=True)
+    Popen(['python', 'HIL_DD_ui_evaluation.py', timestamp, pdb, '--device', 'cuda:' + str(gpu_indices[2])], shell=False,
+          close_fds=True)
     output = os.getcwd()
     if output.strip().endswith('HIL-DD'):
         os.chdir('./backend/')

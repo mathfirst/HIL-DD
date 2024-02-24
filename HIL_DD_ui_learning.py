@@ -12,6 +12,8 @@ import utils.transforms as trans
 from utils.evaluate import PDB_dict
 # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
+
+
 FOLLOW_BATCH = ('protein_element', 'ligand_element', 'ligand_bond_type',)
 
 if __name__ == '__main__':
@@ -132,7 +134,8 @@ if __name__ == '__main__':
         args.pdb_id = args.params[1]
     pocket_idx = int(PDB_dict[args.pdb_id.upper()])
     logger.info(f"loading the data of PDB {args.pdb_id.upper()}")
-    pocket_data = torch.load('configs/test_data_list.pt', map_location=device)[pocket_idx]
+    test_data = torch.load('configs/test_data_list.pt', map_location=device)
+    pocket_data = test_data[pocket_idx]
     protein_pos_val, protein_ele_val, protein_amino_acid_val, protein_is_backbone_val, ligand_pos_val, _ \
         = extract_data(pocket_data, ProteinElement2IndexDict)
     protein_pos_val, protein_ele_val_mean = subtract_mean(protein_pos_val.to(device), verbose=True)
@@ -276,7 +279,7 @@ if __name__ == '__main__':
         model_pref.train()
         num_actual_updates = 0
         show_recent_loss_cls = OnlineAveraging(averaging_range=len_history)
-        for step, batch in enumerate(train_loader):
+        for step, batch in enumerate(train_loader): #
             t = None
             target_pos_pair, target_ele_emb_pair, target_bond_emb_pair, labels, num_positive, num_negative = \
                 prepare_pref_data.sample_pair(num_positive=num_positive_proposals,

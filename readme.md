@@ -65,12 +65,17 @@ the beauty of preference learning in a few minutes.
 ## System requirements
 ### Hardware requirements
 HIL-DD requires a standard computer with at least one graphics processing unit (GPU). In terms of GPU, the code has beed tested on 
-VIDIA GeForce RTX 2060 and 4090. You may want to run our web-based graphical user interface (GUI). In this case, if you have more GPUs, 
+NVIDIA GeForce RTX 2060 and 4090. You may want to run our web-based graphical user interface (GUI). In this case, if you have more GPUs, 
 you can indeed achieve better real-time performance. We usually use 3 GPUs to run our web-based GUI. More specifically, 
 these 4 GPUs are used to propose samples, learn human preferences, and evaluate learning performance, respctively.
 
+### Software requirements
+#### OS Requirements
+This package is supported for Windows and Linux. The package has been tested on the following systems:
+- Windows 11 Pro
+- Linux: Ubuntu 20.04.3
 
-### Dependencies
+#### Dependencies
 
 We recommend using [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html) to 
 create an environment for installing all dependencies. If you have Anaconda installed, please run the following command 
@@ -91,7 +96,45 @@ The main dependencies are as follows:
 - QVina==2.1.0
 - SciPy==1.9.1
 
+
 ---
+
+## Data
+
+We trained/tested ERFM and HIL-DD using the same datasets as [SBDD](https://github.com/luost26/3D-Generative-SBDD), 
+[Pocket2Mol](https://github.com/pengxingang/Pocket2Mol), and [TargetDiff](https://github.com/guanjq/targetdiff). 
+If you only want to sample molecules for the pockets of the CrossDocked test set, 
+we have stored those pockets in `configs/test_data_list.pt`, so you can skip the following steps.
+
+1. Download the dataset archive `crossdocked_pocket10.tar.gz` and the split file `split_by_name.pt` from 
+[this link](https://drive.google.com/drive/folders/1CzwxmTpjbrt83z_wBzcQncq84OVDPurM) and place them under `../data/`. 
+The folder `data` is supposed to be **parallel** with the folder `HIL-DD`.
+2. Extract the TAR archive using the command: `tar -xzvf crossdocked_pocket10.tar.gz`.
+3. Download `test_protein.zip` from [here](https://drive.google.com/file/d/1gyrSIy8uYjtWgzhP5tQxptyR9QlN2o3R/view?usp=drive_link) and unzip it under `./configs`.
+4Preprocess data by running the **first** command in the Code Usage section. 
+
+Please note that it may take approximately **2 hours** to preprocess the data when training ERFM or HIL-DD for the first time. 
+This step is required for training and preference learning.
+
+---
+
+## Graphical user interface 
+We provide an interactive software to run HIL-DD. To run the software, please make sure that the data preprocessing is
+ done. Then you need to run the backend code first and then the frontend code.
+
+### Backend 
+The backend code is available in this repository, namely the folder ``backend``. To run the backend code, you need to 
+activate an installed conda environment, as described in the software requirements section, 
+and then run the following command under the `backend` folder.
+```shell
+python manage.py runserver
+```
+
+### Frontend 
+The frontend code is written by one co-author and it is available in [here](https://github.com/XIwen-chuan/mol). 
+It takes about 5 minutes to install and compile.
+
+
 
 ## Vina Docking Score Calculation
 
@@ -116,19 +159,6 @@ python utils/prepare_receptor4.py -r examples/xxxx_full.pdb -o examples/xxxx_ful
 2. Put the tailored PDB file under `examples/`.
 
 ---
-
-## Data
-
-We trained/tested ERFM and HIL-DD using the same datasets as [SBDD](https://github.com/luost26/3D-Generative-SBDD), 
-[Pocket2Mol](https://github.com/pengxingang/Pocket2Mol), and [TargetDiff](https://github.com/guanjq/targetdiff). 
-If you only want to sample molecules for the pockets of the CrossDocked test set, 
-we have stored those pockets in `configs/test_data_list.pt`, so you can skip the following steps.
-
-1. Download the dataset archive `crossdocked_pocket10.tar.gz` and the split file `split_by_name.pt` from 
-[this link](https://drive.google.com/drive/folders/1CzwxmTpjbrt83z_wBzcQncq84OVDPurM) and place them under `data/`.
-2. Extract the TAR archive using the command: `tar -xzvf crossdocked_pocket10.tar.gz`.
-
-Please note that it may take approximately 2 hours to preprocess the data when training ERFM or HIL-DD for the first time.
 
 ## Prepare proposals for HIL-DD
 
