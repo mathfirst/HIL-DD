@@ -87,8 +87,8 @@ conda create --name HIL-DD --file configs/spec-file.txt
 
 The main dependencies are as follows:
 
-- Python=3.10
-- **PyTorch==1.12.1**
+- Python=3.9+
+- PyTorch==1.12.1+
 - PyTorch Geometric==2.1.0
 - NumPy==1.23.3
 - OpenBabel==3.1.1
