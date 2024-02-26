@@ -68,9 +68,8 @@ if __name__ == '__main__':
                 f"n_steps_per_iter: {n_steps_per_iter}")
 
     num_pockets = config.train.num_pockets
-    num_samples = config.train.num_samples
     only_sample = config.train.only_sample  # if True, this code will be only used to sample
-    logger.info(f"When sampling, num_pockets: {num_pockets}, num_samples: {num_samples}, only_sample: {only_sample}\n"
+    logger.info(f"When sampling, num_pockets: {num_pockets}, only_sample: {only_sample}\n"
                 f"********************************************************************")
 
     init_lr = config.train.optimizer.lr
