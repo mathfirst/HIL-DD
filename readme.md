@@ -3,7 +3,7 @@
 ## About
 This directory contains the code and resources of the following paper:
 
-<i>"Human-in-the-loop De novo Drug Design by Preference Learning". Under review. </i>
+<i>"Harnessing Human Intuition for Robust 3D Molecule Generation by Preference Learning". Under review. </i>
 
 1. HIL-DD is a new Human-In-the-Loop Drug Design framework that enables human experts and AI to co-design molecules in 3D space conditioned on a protein pocket.
 
