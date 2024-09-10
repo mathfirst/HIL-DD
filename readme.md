@@ -1,4 +1,4 @@
-# Human-in-the-loop De novo Drug Design by Preference Learning (HIL-DD)
+# The Human-In-the-Loop Drug Design Framework with Equivariant Rectified Flow (HIL-DD)
 
 ## About
 This directory contains the code and resources of the following paper:
